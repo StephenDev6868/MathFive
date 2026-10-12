@@ -1,0 +1,49 @@
+{
+  "name": "Math5 Design Asset Kit",
+  "version": "1.0.0",
+  "framework": "Nuxt 4 + Vue 3",
+  "assets": {
+    "backgrounds": [
+      "/math5/backgrounds/classroom-window.webp",
+      "/math5/backgrounds/pastel-classroom.svg",
+      "/math5/backgrounds/study-desk.webp"
+    ],
+    "mascots": [
+      "/math5/illustrations/mascot-books.png",
+      "/math5/illustrations/mascot-idea.png",
+      "/math5/illustrations/mascot-notes.png",
+      "/math5/illustrations/mascot-pencil.png",
+      "/math5/illustrations/mascot-reading.png",
+      "/math5/illustrations/mascot-waving.png"
+    ],
+    "decorations": [
+      "/math5/decorations/book-badge.svg",
+      "/math5/decorations/cloud.svg",
+      "/math5/decorations/heart.svg",
+      "/math5/decorations/leaf-sprig.svg",
+      "/math5/decorations/lightbulb-sticker.svg",
+      "/math5/decorations/sparkle.svg",
+      "/math5/decorations/stars-pattern.svg",
+      "/math5/decorations/sticky-note.svg"
+    ],
+    "diagrams": [
+      "/math5/diagrams/garden-18x12.svg"
+    ]
+  },
+  "components": [
+    "app/components/math5/BookSpread.vue",
+    "app/components/math5/CatMascot.vue",
+    "app/components/math5/PhotoQuestionComposer.vue",
+    "app/components/math5/QuickActions.vue",
+    "app/components/math5/SolutionSteps.vue"
+  ],
+  "css": [
+    "app/assets/css/math5-theme.css"
+  ],
+  "sample_page": "app/pages/math5-ui-preview.vue",
+  "agent_docs": [
+    "docs/ASSET_MANIFEST.md",
+    "docs/DESIGN_TOKENS.md",
+    "docs/AGENT_IMPLEMENTATION_PROMPT.md"
+  ]
+}

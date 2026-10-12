@@ -1,0 +1,1 @@
+Follow the root `AGENTS.md`, the `.agents/skills/senior-nuxt-engineer/SKILL.md` guidance and docs in `docs/`. Implement one milestone at a time, include tests, RLS verification and actual command results.

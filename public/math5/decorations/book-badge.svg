@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Huy hiệu sách">
+ <path d="M8 20c14-8 30-8 42 2 12-10 29-10 42-2v60c-15-6-30-5-42 3C38 75 23 74 8 80Z" fill="#FF9B8D" stroke="#C75E5A" stroke-width="4" stroke-linejoin="round"/>
+ <path d="M14 23c13-6 25-5 33 2v49c-10-6-22-6-33-2zm39 2c9-7 23-8 33-2v49c-12-4-23-4-33 2Z" fill="#FFF7E5" stroke="#C75E5A" stroke-width="2"/>
+ <path d="M23 36h16M23 46h16M62 36h16M62 46h16" stroke="#F4B573" stroke-width="3" stroke-linecap="round"/>
+ <path d="M50 24v57" stroke="#C75E5A" stroke-width="3"/>
+ <path d="m71 5 4 11 11 4-11 4-4 11-4-11-11-4 11-4z" fill="#FFD15D"/>
+</svg>

@@ -1,0 +1,6 @@
+---
+description: Math5 project instructions
+globs:
+alwaysApply: true
+---
+Follow `AGENTS.md` and the skill `.agents/skills/senior-nuxt-engineer/SKILL.md`. Requirements are in `docs/`; see `PROMPT_START.md` for initial execution order. Report actual test outcomes.

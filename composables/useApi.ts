@@ -14,7 +14,12 @@ export function useApi() {
       headers.set('Authorization', `Bearer ${authStore.token}`)
     }
 
-    return $fetch<T>(request, {
+    const requestFetch = $fetch as unknown as (
+      url: string,
+      fetchOptions: NitroFetchOptions<NitroFetchRequest>
+    ) => Promise<T>
+
+    return requestFetch(String(request), {
       baseURL: config.public.apiBase,
       ...options,
       headers

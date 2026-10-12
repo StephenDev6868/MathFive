@@ -4,6 +4,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   telemetry: false,
 
+  css: ['~/assets/css/math5-theme.css'],
+
   modules: [
     '@nuxt/ui',
     '@pinia/nuxt',
@@ -12,7 +14,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'MathFive Portal - Nền tảng Ứng dụng & Dịch vụ Số',
+      title: 'Học Toán lớp 5 cùng AI',
       titleTemplate: '%s · MathFive',
       htmlAttrs: {
         lang: 'vi'
@@ -22,14 +24,14 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
-          content: 'Nền tảng portal hiện đại, tối ưu SEO, tích hợp quản lý thành viên, blog và dịch vụ số.'
+          content: 'Trợ lý học Toán lớp 5 giúp học sinh hiểu cách giải từng bước.'
         },
         { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'MathFive Portal' },
-        { property: 'og:title', content: 'MathFive Portal - Nền tảng Đa năng' },
+        { property: 'og:site_name', content: 'MathFive' },
+        { property: 'og:title', content: 'Học Toán lớp 5 cùng AI' },
         {
           property: 'og:description',
-          content: 'Nền tảng portal hiện đại, tối ưu SEO, tích hợp quản lý thành viên, blog và dịch vụ số.'
+          content: 'Chụp đề, thử tự làm và xem hướng dẫn Toán lớp 5 từng bước.'
         }
       ],
       link: [
@@ -55,7 +57,7 @@ export default defineNuxtConfig({
     
     // Public keys available on both client & server
     public: {
-      appName: 'MathFive Portal',
+      appName: 'MathFive',
       apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api'
     }
   }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 128" role="img" aria-label="Bóng đèn gợi ý">
+<path d="M21 50C21 23 33 9 50 9s29 14 29 41c0 20-15 25-17 42H38C36 75 21 69 21 50Z" fill="#FFDA69" stroke="#EFA61A" stroke-width="5"/>
+<path d="M40 93h22M39 102h23M44 112h14" stroke="#B58C48" stroke-width="8" stroke-linecap="round"/>
+<path d="M33 40q3-13 16-16" stroke="#FFF7CB" stroke-width="9" stroke-linecap="round"/>
+<path d="M12 22 5 12M86 20l9-10M51 2V0M10 68 0 73M89 68l11 6" stroke="#FFC447" stroke-width="6" stroke-linecap="round"/>
+</svg>

@@ -1,8 +1,8 @@
 <template>
   <div class="bg-white dark:bg-gray-900 shadow-xl rounded-2xl border border-gray-200 dark:border-gray-800 p-8">
     <div class="mb-6 text-center">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Đăng nhập Cổng Thông tin</h2>
-      <p class="text-sm text-gray-500 mt-1">Truy cập không gian làm việc và dịch vụ của bạn</p>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Chào mừng em trở lại!</h2>
+      <p class="text-sm text-gray-500 mt-1">Đăng nhập để tiếp tục học Toán cùng bạn Miu</p>
     </div>
 
     <!-- Quick Demo Autofill Notice -->
@@ -44,7 +44,7 @@
 
       <div class="flex items-center justify-between text-xs">
         <UCheckbox v-model="form.rememberMe" label="Ghi nhớ đăng nhập" />
-        <a href="#" class="text-emerald-600 dark:text-emerald-400 hover:underline">Quên mật khẩu?</a>
+        <span class="text-gray-500">Quên mật khẩu? Liên hệ giáo viên</span>
       </div>
 
       <UButton
@@ -60,10 +60,7 @@
     </form>
 
     <div class="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800 text-center text-xs text-gray-500">
-      Chưa có tài khoản?
-      <NuxtLink to="/auth/register" class="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline ml-1">
-        Đăng ký tài khoản mới
-      </NuxtLink>
+      Tài khoản học sinh do phụ huynh hoặc nhà trường hỗ trợ khởi tạo.
     </div>
   </div>
 </template>
@@ -75,8 +72,8 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Đăng nhập - MathFive Portal',
-  description: 'Đăng nhập vào cổng thông tin và dịch vụ MathFive.'
+  title: 'Đăng nhập',
+  description: 'Đăng nhập để học Toán lớp 5 cùng MathFive.'
 })
 
 const authStore = useAuthStore()
@@ -119,8 +116,7 @@ async function handleLogin() {
       color: 'emerald'
     })
 
-    // Redirect to previous requested page or portal home
-    const redirectUrl = (route.query.redirect as string) || '/portal'
+    const redirectUrl = (route.query.redirect as string) || '/'
     navigateTo(redirectUrl)
   } catch (err: any) {
     toast.add({

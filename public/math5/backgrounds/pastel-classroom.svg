@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-label="Lớp học pastel nhiều cây xanh và nắng sớm">
+ <defs><linearGradient id="sky" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#9DDFFF"/><stop offset="1" stop-color="#F9FFF2"/></linearGradient><linearGradient id="wall" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#FFF5D8"/><stop offset="1" stop-color="#FFD9B1"/></linearGradient><linearGradient id="desk" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#E4A671"/><stop offset="1" stop-color="#C68152"/></linearGradient></defs>
+ <rect width="1200" height="720" fill="url(#wall)"/>
+ <rect x="130" y="0" width="940" height="570" rx="14" fill="#FBE0B1" stroke="#F4C089" stroke-width="24"/>
+ <rect x="153" y="0" width="894" height="547" fill="url(#sky)"/>
+ <circle cx="898" cy="95" r="49" fill="#FFF4C4" opacity=".95"/>
+ <g fill="#FFFFFF" opacity=".9"><ellipse cx="271" cy="130" rx="115" ry="38"/><ellipse cx="355" cy="114" rx="75" ry="37"/><ellipse cx="732" cy="181" rx="110" ry="28"/><ellipse cx="776" cy="166" rx="67" ry="31"/></g>
+ <path d="M151 465q104-145 245-8q137-124 263 7q190-160 389-3v88H151Z" fill="#9FDD9D"/>
+ <path d="M151 514q124-121 260-11q158-88 307 12q150-125 330 0v35H151Z" fill="#6EBE85"/>
+ <path d="M380 0V548M820 0V548" stroke="#FFEAC8" stroke-width="30"/><path d="M153 286H1048" stroke="#FFEAC8" stroke-width="24"/>
+ <path d="M28 629H1172v91H28z" fill="url(#desk)"/><path d="M0 616h1200v29H0Z" fill="#D59361"/>
+ <g transform="translate(20 418)"><path d="M70 188q-65-128-1-214" fill="none" stroke="#6FAD73" stroke-width="10"/><ellipse cx="65" cy="16" rx="38" ry="68" transform="rotate(-30 65 16)" fill="#82C97B"/><ellipse cx="38" cy="89" rx="29" ry="58" transform="rotate(-58 38 89)" fill="#7BC680"/><ellipse cx="115" cy="60" rx="32" ry="56" transform="rotate(40 115 60)" fill="#A5D887"/><path d="M22 195h115l-12 64H34Z" fill="#E8B07F"/></g>
+ <g transform="translate(1050 434)"><path d="M66 190q58-125 6-215" fill="none" stroke="#659F74" stroke-width="10"/><ellipse cx="44" cy="23" rx="31" ry="55" transform="rotate(-45 44 23)" fill="#89CA8B"/><ellipse cx="115" cy="87" rx="32" ry="61" transform="rotate(52 115 87)" fill="#9AD98B"/><path d="M17 193h115l-13 63H29Z" fill="#DBA376"/></g>
+ <g transform="translate(232 592)"><rect x="0" y="0" width="137" height="28" rx="7" fill="#779DE1"/><rect x="11" y="-27" width="142" height="27" rx="6" fill="#F5A6A0"/><rect x="1" y="-50" width="135" height="22" rx="6" fill="#F9D78A"/></g>
+ <g transform="translate(858 560)"><rect x="0" y="60" width="100" height="28" rx="13" fill="#F4C38E"/><path d="M10 60V0h80v60" fill="#7DBCD0"/><path d="M20 1-8-75M40 1 43-88M67 1 93-74" stroke="#E5AB62" stroke-width="9"/><path d="M-13-83-4-62M43-95 48-75M97-82 84-62" stroke="#E86F68" stroke-width="10"/></g>
+ <rect x="0" y="645" width="1200" height="75" fill="#E9B389" opacity=".55"/>
+</svg>

@@ -1,179 +1,214 @@
-<template>
-  <div class="space-y-24 py-12 md:py-20 overflow-hidden">
-    <!-- Hero Section -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-      <!-- Background Glow Effect -->
-      <div class="absolute inset-0 -top-20 flex items-center justify-center -z-10 pointer-events-none">
-        <div class="w-[600px] h-[350px] bg-emerald-500/15 dark:bg-emerald-500/10 blur-[120px] rounded-full" />
-      </div>
-
-      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-8 border border-emerald-200 dark:border-emerald-800/60 shadow-sm">
-        <UIcon name="i-heroicons-sparkles" class="w-4 h-4" />
-        <span>Bộ Khung Nuxt 3 Doanh Nghiệp Chuẩn Hóa</span>
-      </div>
-
-      <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-gray-900 dark:text-white max-w-4xl mx-auto leading-tight sm:leading-none">
-        Khởi tạo ứng dụng & Web Portal <br class="hidden sm:inline" />
-        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">
-          Tối ưu SEO và Hiệu năng
-        </span>
-      </h1>
-
-      <p class="mt-6 text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
-        Bộ source code hoàn chỉnh xây dựng trên nền tảng Nuxt 3, Nuxt UI, Tailwind CSS và Pinia. Sẵn sàng phát triển các sản phẩm phần mềm SaaS, cổng thông tin và dịch vụ thành viên.
-      </p>
-
-      <div class="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <UButton
-          to="/portal"
-          size="lg"
-          color="emerald"
-          icon="i-heroicons-arrow-right-circle"
-          class="shadow-lg shadow-emerald-500/25"
-        >
-          Khám phá Cổng Portal
-        </UButton>
-        <UButton
-          to="/blog"
-          size="lg"
-          color="gray"
-          variant="outline"
-          icon="i-heroicons-book-open"
-        >
-          Đọc bài viết kỹ thuật
-        </UButton>
-      </div>
-
-      <!-- Hero Dashboard Preview Preview Card -->
-      <div class="mt-16 max-w-5xl mx-auto rounded-2xl p-2 bg-gradient-to-b from-gray-200 dark:from-gray-800 to-transparent shadow-2xl">
-        <div class="rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 sm:p-8 text-left">
-          <div class="flex items-center justify-between pb-6 border-b border-gray-100 dark:border-gray-800">
-            <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-red-400" />
-              <div class="w-3 h-3 rounded-full bg-yellow-400" />
-              <div class="w-3 h-3 rounded-full bg-green-400" />
-              <span class="text-xs text-gray-400 font-mono ml-2">mathfive.vn/portal/dashboard</span>
-            </div>
-            <UBadge color="emerald" variant="subtle" size="sm">Trạng thái: Sẵn sàng vận hành</UBadge>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-            <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
-              <span class="text-xs text-gray-500 uppercase font-semibold">Tốc độ tải SSR</span>
-              <p class="text-2xl font-bold text-emerald-500 mt-1">&lt; 150ms</p>
-              <p class="text-xs text-gray-400 mt-1">Được render từ Nitro Engine</p>
-            </div>
-            <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
-              <span class="text-xs text-gray-500 uppercase font-semibold">Bảo mật xác thực</span>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">JWT + Cookie Guard</p>
-              <p class="text-xs text-gray-400 mt-1">Nuxt Route Middleware an toàn</p>
-            </div>
-            <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-700">
-              <span class="text-xs text-gray-500 uppercase font-semibold">Quản lý State</span>
-              <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">Pinia Reactive</p>
-              <p class="text-xs text-gray-400 mt-1">Đồng bộ hoàn hảo giữa SSR & Client</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Key Features Section -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
-          Tính năng được tối ưu cho Lập trình viên
-        </h2>
-        <p class="mt-4 text-gray-600 dark:text-gray-400">
-          Mọi cấu phần đều được cấu hình tỉ mỉ theo khuyến nghị chính thức của Nuxt và Vue.js.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition">
-          <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-5">
-            <UIcon name="i-heroicons-bolt" class="w-6 h-6" />
-          </div>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Nuxt UI & Tailwind CSS</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Hơn 40+ components dựng sẵn, hỗ trợ Dark Mode tức thì, tùy chỉnh bảng màu linh hoạt qua app.config.ts.
-          </p>
-        </div>
-
-        <div class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition">
-          <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-5">
-            <UIcon name="i-heroicons-shield-check" class="w-6 h-6" />
-          </div>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Hệ thống Phân quyền & Route Guard</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Middleware thông minh ngăn chặn truy cập trái phép, tự động lưu URL chuyển hướng và cấp quyền theo vai trò.
-          </p>
-        </div>
-
-        <div class="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition">
-          <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-5">
-            <UIcon name="i-heroicons-magnifying-glass-circle" class="w-6 h-6" />
-          </div>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Chuẩn hóa SEO & Social Share</h3>
-          <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-            Sẵn sàng thẻ OpenGraph, Twitter Card, Sitemap và thẻ Canonical động thông qua useSeoMeta() của Nuxt.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Câu hỏi thường gặp</h2>
-        <p class="mt-2 text-gray-600 dark:text-gray-400">Giải đáp các thắc mắc phổ biến về dự án.</p>
-      </div>
-
-      <UAccordion :items="faqItems" />
-    </section>
-
-    <!-- Call to action -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 p-8 sm:p-14 text-white text-center shadow-xl relative overflow-hidden">
-        <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">
-          Bắt đầu xây dựng sản phẩm của bạn ngay hôm nay
-        </h2>
-        <p class="max-w-xl mx-auto text-emerald-100 text-base sm:text-lg mb-8">
-          Truy cập Cổng Thành viên để khám phá các dịch vụ số và cấu hình tài khoản cá nhân.
-        </p>
-        <UButton
-          to="/portal"
-          size="xl"
-          color="white"
-          class="text-emerald-700 hover:bg-emerald-50 font-bold px-8 shadow-md"
-        >
-          Truy cập Cổng Thành viên
-        </UButton>
-      </div>
-    </section>
-  </div>
-</template>
-
 <script setup lang="ts">
+import {
+  ArrowRight,
+  Bell,
+  BookOpen,
+  Bookmark,
+  Calculator,
+  Clock3,
+  FlaskConical,
+  Gamepad2,
+  Heart,
+  History,
+  Home,
+  Lightbulb,
+  LogOut,
+  MessageCircle,
+  Search,
+  Sprout,
+  UserRound,
+  X,
+  Zap,
+} from 'lucide-vue-next'
+import BookSpread from '~/components/math5/BookSpread.vue'
+import CatMascot from '~/components/math5/CatMascot.vue'
+import PhotoQuestionComposer from '~/components/math5/PhotoQuestionComposer.vue'
+import SolutionSteps from '~/components/math5/SolutionSteps.vue'
+import type { StudentQuestion } from '~/types/math5'
+
+definePageMeta({ layout: false, middleware: 'auth' })
+
 useSeoMeta({
-  title: 'Trang chủ - Cổng dịch vụ & Phát triển Web Nuxt 3',
-  description: 'Nền tảng portal hiện đại xây dựng trên Nuxt 3, Nuxt UI, Tailwind CSS và Pinia.',
-  ogTitle: 'MathFive Portal - Nền tảng Đa năng',
-  ogDescription: 'Nền tảng portal hiện đại, tối ưu SEO, tích hợp quản lý thành viên, blog và dịch vụ số.'
+  title: 'Học Toán lớp 5 cùng AI',
+  description: 'Chụp hoặc tải đề Toán lớp 5 và học cách giải từng bước.',
 })
 
-const faqItems = [
-  {
-    label: 'Bộ source code này bao gồm những module gì?',
-    content: 'Dự án bao gồm Nuxt 3, Nuxt UI (Tailwind CSS + Headless UI + Iconify), Pinia (@pinia/nuxt) để quản lý state, VueUse (@vueuse/nuxt) cho tiện ích phản ứng, và Zod để xác thực schema.'
-  },
-  {
-    label: 'Làm thế nào để chạy thử tài khoản thành viên?',
-    content: 'Bạn chỉ cần nhấn vào Cổng Thành viên hoặc Đăng nhập, hệ thống đã cung cấp nút tự động điền tài khoản mẫu demo@mathfive.com để trải nghiệm ngay lập tức.'
-  },
-  {
-    label: 'Làm cách nào kết nối với REST API hoặc cơ sở dữ liệu thật?',
-    content: 'Bạn có thể chỉnh sửa các file trong thư mục server/api/ để kết nối với cơ sở dữ liệu (Prisma, Drizzle, MongoDB) hoặc cập nhật NUXT_PUBLIC_API_BASE trong file .env để kết nối với Backend bên ngoài thông qua composable useApi().'
-  }
+type Overlay = 'search' | 'notifications' | 'history' | 'tips' | 'saved' | 'hint' | 'progress' | 'profile' | null
+
+const authStore = useAuthStore()
+const overlay = ref<Overlay>(null)
+const notice = ref('')
+const isSubmitting = ref(false)
+
+const sampleQuestion = 'Một thửa vườn hình chữ nhật có chiều dài 18 m và chiều rộng 12 m. Người làm vườn muốn chia vườn thành các lô nhỏ đều nhau để trồng rau. Nếu mỗi lô có diện tích 6 m², thì vườn sẽ được chia thành bao nhiêu lô?'
+const exampleSteps = [
+  { title: 'Bước 1: Tính diện tích khu vườn', explanation: 'Diện tích hình chữ nhật = chiều dài × chiều rộng.', calculation: '18 × 12 = 216 m²' },
+  { title: 'Bước 2: Diện tích của mỗi lô nhỏ', explanation: 'Mỗi lô nhỏ có diện tích là 6 m².' },
+  { title: 'Bước 3: Tính số lô nhỏ', explanation: 'Số lô nhỏ = diện tích khu vườn ÷ diện tích mỗi lô.', calculation: '216 ÷ 6 = 36 (lô)' },
 ]
+
+const displayName = computed(() => {
+  const rawName = authStore.user?.name || 'Chào An!'
+  return rawName === 'DEMO' ? 'Chào An!' : rawName
+})
+const initials = computed(() => displayName.value.replace('Chào ', '').slice(0, 2).toUpperCase())
+
+const subjects = [
+  { label: 'Toán lớp 5', icon: Calculator, active: true },
+  { label: 'Tiếng Việt', icon: BookOpen, active: false },
+  { label: 'Khoa học tự nhiên', icon: Sprout, active: false },
+  { label: 'Lịch sử và Địa lí', icon: FlaskConical, active: false },
+  { label: 'Tin học', icon: Gamepad2, active: false },
+  { label: 'Đạo đức', icon: Heart, active: false },
+] as const
+
+const recentLessons = [
+  'Bài tập chia hết với 3',
+  'Tìm phân số của số',
+  'Diện tích hình thang',
+  'Số thập phân',
+] as const
+
+const utilityCards = [
+  { id: 'history', title: 'Lịch sử chat', text: 'Xem lại các câu hỏi đã hỏi', icon: History, className: 'is-blue' },
+  { id: 'tips', title: 'Mẹo học hay', text: 'Bí quyết học tốt mỗi ngày', icon: Lightbulb, className: 'is-yellow' },
+  { id: 'saved', title: 'Bài đã lưu', text: 'Xem lại các bài yêu thích', icon: Heart, className: 'is-pink' },
+  { id: 'hint', title: 'Gợi ý nhanh', text: 'Các câu hỏi thường gặp', icon: Zap, className: 'is-orange' },
+] as const
+
+async function handleSubmit(payload: StudentQuestion) {
+  isSubmitting.value = true
+  notice.value = ''
+  await new Promise(resolve => setTimeout(resolve, 550))
+  isSubmitting.value = false
+  notice.value = payload.image && !payload.question
+    ? 'Ảnh đã sẵn sàng. Em hãy nhập lại đề để xác nhận vì OCR chưa được cấu hình trong repo này.'
+    : 'Đề bài đã được ghi nhận. Cần cấu hình dịch vụ OCR/AI để giải đề mới.'
+}
+
+function openOverlay(value: Exclude<Overlay, null>) {
+  overlay.value = value
+}
+
+function handleNavigation(id: string) {
+  if (id === 'home' || id === 'questions') {
+    document.querySelector('.m5-book-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    return
+  }
+  openOverlay(id as Exclude<Overlay, null>)
+}
 </script>
+
+<template>
+  <div class="m5-app m5-app--workspace">
+    <div class="m5-backdrop" aria-hidden="true" />
+
+    <header class="m5-header m5-header--workspace">
+      <button class="m5-brand" type="button" aria-label="Trang chủ" @click="handleNavigation('home')">
+        <img src="/math5/decorations/book-badge.svg" alt="" width="47" height="47" />
+        <span><strong>Học cùng bạn <em>✨</em></strong><small>Dành cho học sinh Tiểu học</small></span>
+      </button>
+
+      <nav class="m5-top-nav" aria-label="Điều hướng chính">
+        <button class="is-active" type="button" @click="handleNavigation('home')"><Home /> Trang chủ</button>
+        <button type="button" @click="handleNavigation('questions')"><MessageCircle /> Hỏi đáp với AI</button>
+        <button type="button" @click="openOverlay('history')"><History /> Lịch sử chat</button>
+        <button type="button" @click="openOverlay('tips')"><Lightbulb /> Mẹo học hay</button>
+      </nav>
+
+      <div class="m5-header__right">
+        <button type="button" aria-label="Tìm kiếm" @click="openOverlay('search')"><Search :size="20" /></button>
+        <button type="button" aria-label="Thông báo" @click="openOverlay('notifications')"><Bell :size="20" /><i /></button>
+        <button class="m5-profile-button" type="button" @click="openOverlay('profile')">
+          <span class="m5-avatar">{{ initials }}</span>
+          <span><strong>Lớp 5</strong><small>{{ displayName }}</small></span>
+        </button>
+      </div>
+    </header>
+
+    <main class="m5-workspace">
+      <aside class="m5-left-rail" aria-label="Môn học">
+        <h2>Môn học</h2>
+        <nav class="m5-subject-list">
+          <button v-for="subject in subjects" :key="subject.label" type="button" :class="{ 'is-active': subject.active }" @click="openOverlay('tips')">
+            <component :is="subject.icon" aria-hidden="true" />
+            <span>{{ subject.label }}</span>
+          </button>
+        </nav>
+        <div class="m5-recent-lessons">
+          <h3>Gần đây</h3>
+          <button v-for="lesson in recentLessons" :key="lesson" type="button" @click="openOverlay('history')">
+            <Clock3 aria-hidden="true" />
+            <span>{{ lesson }}</span>
+          </button>
+          <button class="m5-recent-lessons__all" type="button" @click="openOverlay('history')">Xem tất cả <ArrowRight /></button>
+        </div>
+      </aside>
+
+      <div class="m5-learning-area">
+        <div class="m5-quick-row" aria-label="Tiện ích học tập">
+          <button v-for="card in utilityCards" :key="card.id" type="button" class="m5-utility-card" :class="card.className" @click="openOverlay(card.id)">
+            <span class="m5-utility-card__icon"><component :is="card.icon" /></span>
+            <strong>{{ card.title }}</strong>
+          </button>
+        </div>
+
+        <section class="m5-book-stage" aria-label="Bài học hiện tại">
+          <CatMascot class="m5-book-cat" pose="books" />
+          <BookSpread>
+          <template #question>
+            <p class="m5-book-subtitle">Nhập bài toán hoặc chụp ảnh để AI hỗ trợ từng bước</p>
+            <div class="m5-problem">
+              <div class="m5-problem__topline">
+                <span class="m5-problem__label">Bài toán Toán lớp 5</span>
+                <img src="/math5/decorations/leaf-sprig.svg" alt="" width="28" height="28" />
+              </div>
+              <p>{{ sampleQuestion }}</p>
+              <img class="m5-problem__art" src="/math5/diagrams/garden-18x12.svg" alt="Sơ đồ khu vườn dài 18 mét, rộng 12 mét" />
+            </div>
+            <PhotoQuestionComposer :pending="isSubmitting" @submit="handleSubmit" />
+          </template>
+
+          <template #answer>
+            <p class="m5-book-subtitle">Dưới đây là lời giải chi tiết, dễ hiểu từng bước:</p>
+            <SolutionSteps :steps="exampleSteps" answer="36 lô" answer-prefix="Vườn sẽ được chia thành" />
+          </template>
+          </BookSpread>
+          <p v-if="notice" class="m5-notice" role="status">{{ notice }}</p>
+        </section>
+      </div>
+    </main>
+
+    <nav class="m5-bottom-nav" aria-label="Điều hướng mobile">
+      <button class="is-current" type="button" @click="handleNavigation('home')"><Home /><span>Trang chủ</span></button>
+      <button type="button" @click="handleNavigation('questions')"><MessageCircle /><span>Hỏi đáp</span></button>
+      <button type="button" @click="openOverlay('history')"><Bookmark /><span>Lịch sử</span></button>
+      <button type="button" @click="openOverlay('tips')"><Bell /><span>Mẹo hay</span></button>
+      <button type="button" @click="openOverlay('profile')"><UserRound /><span>Hồ sơ</span></button>
+    </nav>
+
+    <Teleport to="body">
+      <div v-if="overlay" class="m5-overlay" role="presentation" @click.self="overlay = null">
+        <section class="m5-dialog" role="dialog" aria-modal="true">
+          <button class="m5-dialog__close" type="button" aria-label="Đóng" @click="overlay = null"><X :size="22" /></button>
+          <template v-if="overlay === 'profile'">
+            <span class="m5-avatar m5-avatar--large">{{ initials }}</span>
+            <h2>{{ displayName }}</h2>
+            <p class="m5-dialog__email">{{ authStore.user?.email }}</p>
+            <button class="m5-dialog__logout" type="button" @click="authStore.logout"><LogOut :size="18" /> Đăng xuất</button>
+          </template>
+          <template v-else-if="overlay === 'search'">
+            <span class="m5-dialog__icon"><Search /></span><h2>Tìm bài đã học</h2>
+            <label class="m5-dialog__field"><span>Từ khóa</span><input autofocus placeholder="Nhập tên bài hoặc chủ đề..." /></label>
+            <p class="m5-dialog__empty">Chưa có lịch sử để tìm kiếm.</p>
+          </template>
+          <template v-else>
+            <span class="m5-dialog__icon"><Lightbulb /></span>
+            <h2>{{ overlay === 'notifications' ? 'Thông báo' : overlay === 'progress' ? 'Theo dõi tiến bộ' : 'Góc học tập' }}</h2>
+            <div class="m5-dialog__message">Tính năng này đang chờ kết nối dữ liệu thật. Em tiếp tục học với bài mẫu nhé!</div>
+          </template>
+        </section>
+      </div>
+    </Teleport>
+  </div>
+</template>
