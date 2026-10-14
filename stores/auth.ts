@@ -1,91 +1,55 @@
 import { defineStore } from 'pinia'
-import type { User, LoginCredentials } from '~/types'
+import type { LoginCredentials, User } from '~/types'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = useCookie<string | null>('auth_token', {
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production'
-  })
-
+  const supabase = useSupabaseClient()
+  const session = useSupabaseSession()
   const user = useState<User | null>('auth_user', () => null)
   const loading = ref(false)
+  const token = computed(() => session.value?.access_token ?? null)
+  const isAuthenticated = computed(() => Boolean(token.value && user.value))
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
-
-  // Fetch current user profile if token exists
   async function fetchProfile() {
-    if (!token.value) {
+    const { data: authData } = await supabase.auth.getUser()
+    if (!authData.user) {
       user.value = null
       return
     }
-
-    try {
-      loading.value = true
-      const data = await $fetch<User>('/api/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token.value}`
-        }
-      })
-      user.value = data
-    } catch {
-      // Token invalid or expired
-      logout()
-    } finally {
-      loading.value = false
+    const { data: profile } = await supabase.from('profiles')
+      .select('display_name, role, created_at')
+      .eq('id', authData.user.id)
+      .maybeSingle()
+    if (!profile) {
+      user.value = null
+      return
+    }
+    user.value = {
+      id: authData.user.id,
+      name: profile.display_name,
+      email: authData.user.email || '',
+      role: profile.role === 'teacher' ? 'teacher' : 'student',
+      avatar: '',
+      createdAt: profile.created_at,
     }
   }
 
-  // Handle Login
   async function login(credentials: LoginCredentials) {
     loading.value = true
     try {
-      const response = await $fetch<{ user: User; token: string }>('/api/auth/login', {
-        method: 'POST',
-        body: credentials
-      })
-
-      token.value = response.token
-      user.value = response.user
-      return response
+      const { error } = await supabase.auth.signInWithPassword({ email: credentials.email, password: credentials.password })
+      if (error) throw error
+      await fetchProfile()
+      if (!user.value) throw new Error('Tài khoản chưa được cấp hồ sơ học sinh hoặc giáo viên.')
     } finally {
       loading.value = false
     }
   }
 
-  // Handle Logout
   async function logout() {
-    try {
-      if (token.value) {
-        await $fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token.value}`
-          }
-        }).catch(() => {})
-      }
-    } finally {
-      token.value = null
-      user.value = null
-      navigateTo('/auth/login')
-    }
+    await supabase.auth.signOut()
+    user.value = null
+    await navigateTo('/auth/login')
   }
 
-  // Update profile
-  function updateProfile(updated: Partial<User>) {
-    if (user.value) {
-      user.value = { ...user.value, ...updated }
-    }
-  }
-
-  return {
-    user,
-    token,
-    loading,
-    isAuthenticated,
-    fetchProfile,
-    login,
-    logout,
-    updateProfile
-  }
+  return { user, token, loading, isAuthenticated, fetchProfile, login, logout }
 })

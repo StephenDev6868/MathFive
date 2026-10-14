@@ -31,6 +31,8 @@ export function useApi() {
       fetchWithAuth<T>(url, { method: 'GET', ...options }),
     post: <T>(url: NitroFetchRequest, body?: any, options?: NitroFetchOptions<NitroFetchRequest>) =>
       fetchWithAuth<T>(url, { method: 'POST', body, ...options }),
+    patch: <T>(url: NitroFetchRequest, body?: any, options?: NitroFetchOptions<NitroFetchRequest>) =>
+      fetchWithAuth<T>(url, { method: 'PATCH', body, ...options }),
     put: <T>(url: NitroFetchRequest, body?: any, options?: NitroFetchOptions<NitroFetchRequest>) =>
       fetchWithAuth<T>(url, { method: 'PUT', body, ...options }),
     delete: <T>(url: NitroFetchRequest, options?: NitroFetchOptions<NitroFetchRequest>) =>

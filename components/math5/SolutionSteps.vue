@@ -12,6 +12,8 @@ withDefaults(defineProps<{
   <div class="m5-solution" aria-live="polite">
     <p v-if="pending" class="m5-solution__pending"><Sparkles :size="19" /> AI đang phân tích bài toán...</p>
     <template v-else>
+      <p v-if="!steps.length && !answer" class="m5-solution__empty">Gửi đề bài để AI hướng dẫn từng bước nhé!</p>
+      <template v-else>
       <p class="m5-solution__intro">Cùng xem từng bước để hiểu bài nhé!</p>
       <ol class="m5-solution__steps">
         <li v-for="(step,index) in steps" :key="index" class="m5-solution__step">
@@ -29,6 +31,7 @@ withDefaults(defineProps<{
         <strong>{{ answer }}</strong>
       </div>
       <p v-if="answer" class="m5-solution__foot"><BookOpen :size="17" /> Đọc lại các bước để nhớ cách làm nhé!</p>
+      </template>
     </template>
   </div>
 </template>

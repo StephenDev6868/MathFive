@@ -9,8 +9,17 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@pinia/nuxt',
-    '@vueuse/nuxt'
+    '@vueuse/nuxt',
+    '@nuxtjs/supabase'
   ],
+
+  supabase: {
+    redirectOptions: {
+      login: '/auth/login',
+      callback: '/auth/confirm',
+      exclude: ['/auth/login']
+    }
+  },
 
   app: {
     head: {
@@ -52,13 +61,19 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
-    // Private keys only available on server
-    jwtSecret: process.env.JWT_SECRET || 'super-secret-key-change-me-in-production',
+    openaiApiKey: process.env.NUXT_OPENAI_API_KEY,
+    openaiVisionModel: process.env.NUXT_OPENAI_VISION_MODEL,
+    openaiSolveModel: process.env.NUXT_OPENAI_SOLVE_MODEL,
+    supabaseSecretKey: process.env.NUXT_SUPABASE_SECRET_KEY,
+    aiDailyOcrLimit: Number(process.env.NUXT_AI_DAILY_OCR_LIMIT || 20),
+    aiDailySolveLimit: Number(process.env.NUXT_AI_DAILY_SOLVE_LIMIT || 15),
     
     // Public keys available on both client & server
     public: {
       appName: 'MathFive',
-      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api'
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
+      supabaseUrl: process.env.NUXT_PUBLIC_SUPABASE_URL,
+      supabaseKey: process.env.NUXT_PUBLIC_SUPABASE_KEY
     }
   }
 })

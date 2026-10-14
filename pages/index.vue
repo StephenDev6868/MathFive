@@ -24,7 +24,7 @@ import BookSpread from '~/components/math5/BookSpread.vue'
 import CatMascot from '~/components/math5/CatMascot.vue'
 import PhotoQuestionComposer from '~/components/math5/PhotoQuestionComposer.vue'
 import SolutionSteps from '~/components/math5/SolutionSteps.vue'
-import type { StudentQuestion } from '~/types/math5'
+import type { MathStep, StudentQuestion } from '~/types/math5'
 
 definePageMeta({ layout: false, middleware: 'auth' })
 
@@ -39,6 +39,15 @@ const authStore = useAuthStore()
 const overlay = ref<Overlay>(null)
 const notice = ref('')
 const isSubmitting = ref(false)
+const isConfirming = ref(false)
+const problemId = ref<string | null>(null)
+const confirmedText = ref('')
+const unclearSegments = ref<string[]>([])
+const needsReview = ref(false)
+const ocrReview = ref<HTMLElement | null>(null)
+const solutionSteps = ref<MathStep[]>([])
+const finalAnswer = ref('')
+const { submit, confirm, solve } = useProblem()
 
 const sampleQuestion = 'Một thửa vườn hình chữ nhật có chiều dài 18 m và chiều rộng 12 m. Người làm vườn muốn chia vườn thành các lô nhỏ đều nhau để trồng rau. Nếu mỗi lô có diện tích 6 m², thì vườn sẽ được chia thành bao nhiêu lô?'
 const exampleSteps = [
@@ -79,11 +88,53 @@ const utilityCards = [
 async function handleSubmit(payload: StudentQuestion) {
   isSubmitting.value = true
   notice.value = ''
-  await new Promise(resolve => setTimeout(resolve, 550))
-  isSubmitting.value = false
-  notice.value = payload.image && !payload.question
-    ? 'Ảnh đã sẵn sàng. Em hãy nhập lại đề để xác nhận vì OCR chưa được cấu hình trong repo này.'
-    : 'Đề bài đã được ghi nhận. Cần cấu hình dịch vụ OCR/AI để giải đề mới.'
+  solutionSteps.value = []
+  finalAnswer.value = ''
+  try {
+    const recognized = await submit(payload)
+    problemId.value = recognized.problemId
+    confirmedText.value = recognized.ocrText
+    unclearSegments.value = recognized.unclearSegments
+    needsReview.value = !payload.image || recognized.needsConfirmation === true || recognized.unclearSegments.length > 0
+    if (!needsReview.value) {
+      notice.value = 'Ảnh rõ rồi — AI đang chuẩn bị lời giải cho em.'
+      await confirmAndSolve()
+      return
+    }
+    notice.value = recognized.unclearSegments.length
+      ? 'AI cần em kiểm tra vài chỗ được đánh dấu trước khi giải.'
+      : 'Em xem nhanh đề bài rồi bấm xác nhận để AI giải nhé.'
+    await nextTick()
+    ocrReview.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  } catch (error: any) {
+    notice.value = error?.data?.statusMessage || error?.message || 'Không thể gửi đề bài. Em hãy thử lại nhé.'
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+async function confirmAndSolve() {
+  if (!problemId.value) return
+  isConfirming.value = true
+  notice.value = ''
+  try {
+    await confirm(problemId.value, confirmedText.value)
+    const solution = await solve(problemId.value)
+    solutionSteps.value = solution.steps
+    finalAnswer.value = solution.finalAnswer || ''
+    if (solution.status === 'solved') {
+      unclearSegments.value = []
+      needsReview.value = false
+    } else {
+      unclearSegments.value = [solution.tip]
+      needsReview.value = true
+    }
+    notice.value = solution.tip
+  } catch (error: any) {
+    notice.value = error?.data?.statusMessage || error?.message || 'Chưa thể tạo lời giải. Em hãy thử lại nhé.'
+  } finally {
+    isConfirming.value = false
+  }
 }
 
 function openOverlay(value: Exclude<Overlay, null>) {
@@ -154,7 +205,7 @@ function handleNavigation(id: string) {
         </div>
 
         <section class="m5-book-stage" aria-label="Bài học hiện tại">
-          <CatMascot class="m5-book-cat" pose="books" />
+          <!-- <CatMascot class="m5-book-cat" pose="books" /> -->
           <BookSpread>
           <template #question>
             <p class="m5-book-subtitle">Nhập bài toán hoặc chụp ảnh để AI hỗ trợ từng bước</p>
@@ -167,11 +218,19 @@ function handleNavigation(id: string) {
               <img class="m5-problem__art" src="/math5/diagrams/garden-18x12.svg" alt="Sơ đồ khu vườn dài 18 mét, rộng 12 mét" />
             </div>
             <PhotoQuestionComposer :pending="isSubmitting" @submit="handleSubmit" />
+            <div v-if="problemId && needsReview" ref="ocrReview" class="m5-ocr-review" tabindex="-1">
+              <div class="m5-ocr-review__heading"><span aria-hidden="true">🔎</span><div><strong>Kiểm tra đề trước khi giải</strong><small>AI giữ nguyên nội dung; em chỉ cần sửa nếu có chỗ sai.</small></div></div>
+              <div v-if="unclearSegments.length" class="m5-ocr-review__warning" role="alert"><strong>AI chưa chắc ở:</strong><ul><li v-for="segment in unclearSegments" :key="segment">{{ segment }}</li></ul></div>
+              <textarea v-model="confirmedText" rows="5" maxlength="5000" :disabled="isConfirming" aria-label="Xác nhận đề bài" />
+              <button type="button" :disabled="isConfirming" @click="confirmAndSolve">
+                {{ isConfirming ? 'Đang tạo lời giải...' : 'Đề đúng rồi, xem lời giải' }}
+              </button>
+            </div>
           </template>
 
           <template #answer>
             <p class="m5-book-subtitle">Dưới đây là lời giải chi tiết, dễ hiểu từng bước:</p>
-            <SolutionSteps :steps="exampleSteps" answer="36 lô" answer-prefix="Vườn sẽ được chia thành" />
+            <SolutionSteps :steps="solutionSteps" :answer="finalAnswer" answer-prefix="Đáp số:" :pending="isConfirming" />
           </template>
           </BookSpread>
           <p v-if="notice" class="m5-notice" role="status">{{ notice }}</p>

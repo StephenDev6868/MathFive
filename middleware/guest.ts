@@ -6,6 +6,6 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   if (authStore.isAuthenticated) {
-    return navigateTo('/portal')
+    return navigateTo('/')
   }
 })
