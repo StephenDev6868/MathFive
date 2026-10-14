@@ -15,10 +15,11 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       return
     }
-    const { data: profile } = await supabase.from('profiles')
+    const { data: profileData } = await supabase.from('profiles')
       .select('display_name, role, created_at')
       .eq('id', authData.user.id)
       .maybeSingle()
+    const profile = profileData as { display_name: string; role: string; created_at: string } | null
     if (!profile) {
       user.value = null
       return

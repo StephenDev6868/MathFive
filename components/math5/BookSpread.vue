@@ -7,18 +7,18 @@
     </picture>
 
     <div class="m5-book__content">
-      <section class="m5-book__page m5-book__page--question" aria-label="Trang hỏi bài">
+      <section class="m5-book__page m5-book__page--question" aria-label="Trang gửi bài làm">
         <header class="m5-book__heading m5-book__heading--question">
           <MessageCircleQuestion :size="29" aria-hidden="true" />
-          <h2>Hỏi đáp với AI</h2>
+          <h2>Gửi bài làm</h2>
           <img src="/math5/decorations/sparkle.svg" alt="" />
         </header>
         <slot name="question" />
       </section>
-      <section class="m5-book__page m5-book__page--answer" aria-label="Trang lời giải">
+      <section class="m5-book__page m5-book__page--answer" aria-label="Trang nhận xét bài làm">
         <header class="m5-book__heading m5-book__heading--answer">
           <Lightbulb :size="29" aria-hidden="true" />
-          <h2>Lời giải từ AI</h2>
+          <h2>AI chữa bài</h2>
           <img src="/math5/decorations/book-badge.svg" alt="" />
         </header>
         <slot name="answer" />

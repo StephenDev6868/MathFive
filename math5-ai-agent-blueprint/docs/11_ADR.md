@@ -29,3 +29,6 @@ Client-supplied `assistance_level` is not trustworthy. Track observed hint/solut
 
 ## ADR-010: Privacy/retention/consent — PENDING
 School/parent authorization, retention windows, access revocation, data deletion and vendor transfer notice require decision before deploying to minors.
+
+## ADR-011: Formative error review replaces answer generation — accepted
+The primary student flow reviews the work already attempted: preserve OCR mistakes verbatim, identify the exact location and type of each error, explain why it needs revision, and provide only the next hint. It must not generate a complete worked solution or final answer. Reviews are stored in `ai_reviews`, separate from the legacy `solutions` table, so model feedback cannot be mistaken for a verified student result. The legacy `/solve` route remains temporarily for client compatibility but returns the review contract.

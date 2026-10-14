@@ -40,10 +40,10 @@ import { Camera, ImageUp, History, Lightbulb, Heart, Send } from 'lucide-vue-nex
 <script setup lang="ts">
 import BookSpread from '~/components/math5/BookSpread.vue'
 import PhotoQuestionComposer from '~/components/math5/PhotoQuestionComposer.vue'
-import SolutionSteps from '~/components/math5/SolutionSteps.vue'
-import type { StudentQuestion, MathStep } from '~/types/math5'
+import WorkReview from '~/components/math5/WorkReview.vue'
+import type { StudentQuestion, WorkReview as WorkReviewResult } from '~/types/math5'
 
-const steps: MathStep[] = [] // Điền từ API thật
+const review = ref<WorkReviewResult | null>(null) // Điền từ API thật
 async function submit(payload: StudentQuestion) {
   // TODO: gọi Nitro endpoint với FormData + auth; không gọi OpenAI trực tiếp ở client.
   console.log('Demo question length:', payload.question.length)
@@ -52,7 +52,7 @@ async function submit(payload: StudentQuestion) {
 <template>
   <BookSpread>
     <template #question><PhotoQuestionComposer @submit="submit" /></template>
-    <template #answer><SolutionSteps :steps="steps" answer="" /></template>
+    <template #answer><WorkReview :review="review" /></template>
   </BookSpread>
 </template>
 ```

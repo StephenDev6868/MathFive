@@ -8,7 +8,6 @@ export function useAuth() {
     loading: computed(() => authStore.loading),
     login: authStore.login,
     logout: authStore.logout,
-    fetchProfile: authStore.fetchProfile,
-    updateProfile: authStore.updateProfile
+    fetchProfile: authStore.fetchProfile
   }
 }

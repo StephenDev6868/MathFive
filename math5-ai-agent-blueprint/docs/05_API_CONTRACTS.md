@@ -23,9 +23,9 @@ If confidence/clarity insufficient, force manual correction. Preserve source ima
 ### PATCH /api/problems/:id/confirm
 Request `{"confirmedText":"..."}`. Owner only. Trims/validates length 10–5000 chars; nonempty, no model solve until confirmed; return updated problem. Do not overwrite original `ocr_text`.
 
-### POST /api/problems/:id/solve
-Request `{"requestId":"uuid"}`. Owner only; `confirmed_text IS NOT NULL`; if solution already exists return cached solution and do **not** consume quota again. Atomic solve quota reserve, OpenAI structured solution. Validate `steps` array, finalAnswer nonempty, units, reasonable size; output persisted to `solutions`.
-Response `{ "data": {"problemId":"uuid", "steps":[{"title":"Bước 1","explanation":"...","calculation":"..."}], "finalAnswer":"...", "isVerified":false}, "requestId":"uuid"}`. `isVerified` is conservative unless deterministic check passed.
+### POST /api/problems/:id/solve (legacy path, work-review contract)
+Request `{"requestId":"uuid"}`. Owner only; `confirmed_text IS NOT NULL`; if a review already exists return it without consuming quota. The confirmed text must include the problem and the student's attempted work. The model identifies errors and gives a next-step hint; it must not return a full solution or final answer. Output is persisted to `ai_reviews`.
+Response `{ "data": {"problemId":"uuid", "status":"has_errors", "summary":"...", "strengths":["..."], "issues":[{"location":"Dòng tính diện tích","studentWork":"18 + 12 = 30 m²","errorType":"reasoning","explanation":"...","hint":"..."}], "nextStep":"..."}, "requestId":"uuid"}`. Status is one of `correct|has_errors|needs_review|no_attempt`; it remains AI feedback and is not an authoritative grade.
 
 ### POST /api/problems/:id/attempt
 Request `{"submittedAnswer":"90 kg"}`. Owner only. Assistance level must be derived by server from observed interactions (or explicitly reported as unverified), never accepted as an authoritative client-reported score. Store as `ungraded` initially. `verdict` can be set to `correct/incorrect` **only** via reliable grading pipeline; ambiguous answers -> `needs_review`. Do not let client choose verdict.

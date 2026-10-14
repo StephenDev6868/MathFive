@@ -25,7 +25,7 @@ Bộ giao diện có thể tích hợp vào **Nuxt 4** từ concept mobile/iPad 
    css: ['~/assets/css/math5-theme.css'],
    ```
 4. Chạy `npm run dev` và mở `/math5-ui-preview`.
-5. Tích hợp `PhotoQuestionComposer @submit` vào API Nitro thật (`recognize`/`solve`); cập nhật `SolutionSteps :steps` bằng dữ liệu API.
+5. Tích hợp `PhotoQuestionComposer @submit` vào API Nitro thật (`recognize`/`solve`); cập nhật `WorkReview :review` bằng dữ liệu nhận xét.
 6. Kiểm thử trên mobile 360/390/430px, iPad 768/820/1024px, và desktop ≥ 1280px.
 
 ### Quan trọng
@@ -42,7 +42,7 @@ Bộ giao diện có thể tích hợp vào **Nuxt 4** từ concept mobile/iPad 
 |---|---|---|
 | `BookSpread.vue` | 2 trang sách iPad, xếp dọc mobile | Slots `question`, `answer` |
 | `PhotoQuestionComposer.vue` | **Row 1** camera/upload; **Row 2** chat; nút gửi | Emits `submit({question,image,source})` |
-| `SolutionSteps.vue` | Các bước giải và đáp án | Prop `steps`, `answer`, `pending` |
+| `WorkReview.vue` | Phát hiện lỗi và gợi ý tự sửa | Prop `review`, `pending` |
 | `QuickActions.vue` | Lịch sử, mẹo, lưu, gợi ý | Emits `select(action)` |
 | `CatMascot.vue` | Chọn 6 tư thế mèo | Prop `pose` |
 

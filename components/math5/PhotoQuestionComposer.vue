@@ -36,7 +36,7 @@ function onChoose(event: Event, source: 'camera' | 'upload') {
 function submit() {
   error.value = ''
   if (!question.value.trim() && !image.value) {
-    error.value = 'Em hãy nhập câu hỏi hoặc chọn ảnh bài toán nhé!'
+    error.value = 'Em hãy nhập đề kèm bài làm hoặc chọn ảnh vở bài tập nhé!'
     return
   }
   emit('submit', { question: question.value.trim(), image: image.value, source: imageSource.value })
@@ -50,15 +50,15 @@ onBeforeUnmount(clearPreview)
     <div class="m5-composer__image-row">
       <button class="m5-image-action m5-image-action--camera" type="button" :disabled="pending" @click="cameraInput?.click()">
         <Camera :size="25" aria-hidden="true" />
-        <span>Chụp ảnh bài tập</span>
+        <span>Chụp ảnh bài làm</span>
       </button>
       <button class="m5-image-action m5-image-action--upload" type="button" :disabled="pending" @click="uploadInput?.click()">
         <ImageUp :size="25" aria-hidden="true" />
-        <span>Tải ảnh lên</span>
+        <span>Tải ảnh bài làm</span>
       </button>
     </div>
-    <input ref="cameraInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="m5-sr-only" aria-label="Chụp ảnh bài tập" @change="onChoose($event, 'camera')" />
-    <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" class="m5-sr-only" aria-label="Tải ảnh bài tập" @change="onChoose($event, 'upload')" />
+    <input ref="cameraInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="m5-sr-only" aria-label="Chụp ảnh bài làm" @change="onChoose($event, 'camera')" />
+    <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" class="m5-sr-only" aria-label="Tải ảnh bài làm" @change="onChoose($event, 'upload')" />
 
     <div v-if="image && previewUrl" class="m5-image-preview">
       <FileImage :size="18" aria-hidden="true" />
@@ -69,13 +69,13 @@ onBeforeUnmount(clearPreview)
 
     <!-- Row 2: independent full-width chat entry -->
     <label class="m5-composer__chat-row">
-      <span class="m5-sr-only">Nhập câu hỏi Toán lớp 5</span>
-      <textarea v-model="question" rows="2" maxlength="3000" :disabled="pending" placeholder="Hoặc nhập câu hỏi của em..." />
+      <span class="m5-sr-only">Nhập đề và bài làm Toán lớp 5</span>
+      <textarea v-model="question" rows="2" maxlength="3000" :disabled="pending" placeholder="Hoặc nhập đề bài và cách em đã làm..." />
     </label>
     <p v-if="error" class="m5-composer__error" role="alert">{{ error }}</p>
     <button class="m5-composer__send" type="button" :disabled="pending" @click="submit">
       <span v-if="pending" class="m5-spinner" aria-hidden="true" />
-      <Send v-else :size="23" aria-hidden="true" /> {{ pending ? 'Đang chuẩn bị đề...' : 'Gửi đề bài' }}
+      <Send v-else :size="23" aria-hidden="true" /> {{ pending ? 'Đang đọc bài làm...' : 'Kiểm tra bài làm' }}
     </button>
   </div>
 </template>

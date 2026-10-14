@@ -14,6 +14,7 @@ erDiagram
   MATH_PROBLEMS ||--o{ STUDENT_ATTEMPTS : answered_by
   PROFILES ||--o{ STUDENT_ATTEMPTS : submits
   PROFILES ||--o{ AI_USAGE_DAILY : consumes
+  MATH_PROBLEMS ||--o| AI_REVIEWS : receives
 
   AUTH_USERS { uuid id PK }
   PROFILES { uuid id PK text display_name text role timestamptz created_at }
@@ -24,9 +25,10 @@ erDiagram
   SOLUTIONS { uuid id PK uuid problem_id FK jsonb steps text final_answer text model_name int input_tokens int output_tokens }
   STUDENT_ATTEMPTS { uuid id PK uuid problem_id FK uuid student_id FK text submitted_answer text verdict int assistance_level }
   AI_USAGE_DAILY { uuid student_id PK,FK date usage_date PK text kind PK int used }
+  AI_REVIEWS { uuid id PK uuid problem_id FK text status jsonb strengths jsonb issues text next_step }
 ```
 
-## 7 domain tables + 1 operational
+## 8 domain tables + 1 operational
 - `profiles` (auth.users.id PK): role `student|teacher`, display name, no birthdate/name requirement.
 - `classrooms`: belongs to one teacher (`teacher_id`).
 - `classroom_members`: many-to-many class/student. Teachers may own multiple classes; student may join multiple classes.
@@ -35,6 +37,7 @@ erDiagram
 - `solutions`: one initial AI solution per problem in MVP. If regeneration/versioning required, remove unique constraint **through planned migration**, not ad hoc.
 - `student_attempts`: multiple attempts; verdict `ungraded|correct|incorrect|needs_review`; `assistance_level` distinguishes own work vs hint vs viewed solution.
 - `ai_usage_daily`: atomic per-student per-day OCR and solve counters; quota reserve before spending token.
+- `ai_reviews`: one formative AI review per problem; stores strengths, located errors and a next-step hint, never a full model answer.
 
 ## Keys, indices, consistency
 - Use UUID; authenticated user's ID derives from verified session not request body.
@@ -47,6 +50,7 @@ erDiagram
 ## Migrations
 1. `supabase/migrations/20261010_000001_initial.sql`: 7 core tables + Supabase RLS + private bucket; derived from the pilot initial schema.
 2. `supabase/migrations/20261010_000002_ai_quota.sql`: eighth table + atomic quota reservation RPC `public.consume_ai_quota` (only service-role may execute).
+3. `supabase/migrations/20261014_000003_ai_reviews.sql`: formative review table, RLS policy and `reviewed` problem status.
 
 **Warning:** migrations provided are a starting point; inspect syntax in a disposable Supabase local/test project, test policies with `anon`, `student A`, `student B`, `teacher A`, `teacher B` and an unauthorized teacher. Do not apply blindly to live data.
 

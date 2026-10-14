@@ -35,7 +35,7 @@
     "app/components/math5/CatMascot.vue",
     "app/components/math5/PhotoQuestionComposer.vue",
     "app/components/math5/QuickActions.vue",
-    "app/components/math5/SolutionSteps.vue"
+    "app/components/math5/WorkReview.vue"
   ],
   "css": [
     "app/assets/css/math5-theme.css"

@@ -26,16 +26,22 @@ export const OcrResultSchema = z.object({
   needsConfirmation: z.boolean(),
 })
 
-export const SolutionResultSchema = z.object({
-  status: z.enum(['solved', 'insufficient_data', 'needs_review']),
-  steps: z.array(z.object({
-    title: z.string().min(1).max(80),
-    explanation: z.string().min(1).max(1500),
-    calculation: z.string().max(500).nullable(),
-  })).max(20),
-  finalAnswer: z.string().max(1000).nullable(),
-  tip: z.string().min(1).max(400),
+export const ReviewIssueSchema = z.object({
+  location: z.string().min(1).max(160),
+  studentWork: z.string().min(1).max(500),
+  errorType: z.enum(['copied_data', 'reasoning', 'calculation', 'unit', 'notation', 'other']),
+  explanation: z.string().min(1).max(700),
+  hint: z.string().min(1).max(500),
+})
+
+export const WorkReviewResultSchema = z.object({
+  status: z.enum(['correct', 'has_errors', 'needs_review', 'no_attempt']),
+  summary: z.string().min(1).max(500),
+  strengths: z.array(z.string().min(1).max(300)).max(5),
+  issues: z.array(ReviewIssueSchema).max(10),
+  nextStep: z.string().min(1).max(500),
 })
 
 export type OcrResult = z.infer<typeof OcrResultSchema>
-export type SolutionResult = z.infer<typeof SolutionResultSchema>
+export type ReviewIssue = z.infer<typeof ReviewIssueSchema>
+export type WorkReviewResult = z.infer<typeof WorkReviewResultSchema>

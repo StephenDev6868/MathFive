@@ -41,7 +41,7 @@ npm install @nuxt/ui openai zod
 # Copy các file docs, AGENTS.md, .agents/, supabase/ và .env.example của pack vào root repo.
 ```
 
-Migrations chạy tuần tự trên Supabase project **mới**: `20261010_000001_initial.sql` rồi `20261010_000002_ai_quota.sql`. Không chạy lặp script initial trên project đang có dữ liệu. Trước production phải chạy test RLS + test chức năng với tài khoản student A / student B / teacher A / teacher B.
+Migrations chạy tuần tự trên Supabase project **mới**: `20261010_000001_initial.sql`, `20261010_000002_ai_quota.sql`, rồi `20261014_000003_ai_reviews.sql`. Không chạy lặp script initial trên project đang có dữ liệu. Trước production phải chạy test RLS + test chức năng với tài khoản student A / student B / teacher A / teacher B.
 
 ## Definition of success
 

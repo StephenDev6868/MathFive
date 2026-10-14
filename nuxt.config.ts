@@ -23,7 +23,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'Học Toán lớp 5 cùng AI',
+      title: 'AI kiểm tra bài làm Toán lớp 5',
       titleTemplate: '%s · MathFive',
       htmlAttrs: {
         lang: 'vi'
@@ -33,14 +33,14 @@ export default defineNuxtConfig({
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         {
           name: 'description',
-          content: 'Trợ lý học Toán lớp 5 giúp học sinh hiểu cách giải từng bước.'
+          content: 'AI phát hiện lỗi trong bài làm Toán lớp 5 và gợi ý để học sinh tự sửa.'
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:site_name', content: 'MathFive' },
-        { property: 'og:title', content: 'Học Toán lớp 5 cùng AI' },
+        { property: 'og:title', content: 'AI kiểm tra bài làm Toán lớp 5' },
         {
           property: 'og:description',
-          content: 'Chụp đề, thử tự làm và xem hướng dẫn Toán lớp 5 từng bước.'
+          content: 'Chụp bài làm, tìm chỗ sai và nhận gợi ý để tự sửa.'
         }
       ],
       link: [

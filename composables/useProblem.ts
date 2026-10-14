@@ -1,7 +1,7 @@
-import type { MathStep, StudentQuestion } from '~/types/math5'
+import type { StudentQuestion, WorkReview } from '~/types/math5'
 
 type RecognizedProblem = { problemId: string; ocrText: string; unclearSegments: string[]; needsConfirmation?: boolean }
-type SolvedProblem = { status: 'solved' | 'insufficient_data' | 'needs_review'; steps: MathStep[]; finalAnswer: string | null; tip: string; isVerified: boolean }
+type ReviewedProblem = WorkReview & { problemId: string }
 
 export function useProblem() {
   const supabase = useSupabaseClient()
@@ -26,9 +26,10 @@ export function useProblem() {
     await api.patch(`/problems/${problemId}/confirm`, { confirmedText })
   }
 
-  async function solve(problemId: string): Promise<SolvedProblem> {
-    return (await api.post<{ data: SolvedProblem }>(`/problems/${problemId}/solve`, { requestId: requestId() })).data
+  async function review(problemId: string): Promise<ReviewedProblem> {
+    // Keep the legacy route for existing clients; its contract now returns formative feedback.
+    return (await api.post<{ data: ReviewedProblem }>(`/problems/${problemId}/solve`, { requestId: requestId() })).data
   }
 
-  return { submit, confirm, solve }
+  return { submit, confirm, review }
 }

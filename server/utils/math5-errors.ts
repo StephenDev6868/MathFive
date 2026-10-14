@@ -1,4 +1,4 @@
-export function math5Error(statusCode: number, statusMessage: string) {
+export function math5Error(statusCode: number, statusMessage: string): never {
   throw createError({ statusCode, statusMessage })
 }
 

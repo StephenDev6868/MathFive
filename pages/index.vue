@@ -21,16 +21,15 @@ import {
   Zap,
 } from 'lucide-vue-next'
 import BookSpread from '~/components/math5/BookSpread.vue'
-import CatMascot from '~/components/math5/CatMascot.vue'
 import PhotoQuestionComposer from '~/components/math5/PhotoQuestionComposer.vue'
-import SolutionSteps from '~/components/math5/SolutionSteps.vue'
-import type { MathStep, StudentQuestion } from '~/types/math5'
+import WorkReview from '~/components/math5/WorkReview.vue'
+import type { StudentQuestion, WorkReview as WorkReviewResult } from '~/types/math5'
 
 definePageMeta({ layout: false, middleware: 'auth' })
 
 useSeoMeta({
-  title: 'Học Toán lớp 5 cùng AI',
-  description: 'Chụp hoặc tải đề Toán lớp 5 và học cách giải từng bước.',
+  title: 'AI kiểm tra bài làm Toán lớp 5',
+  description: 'Chụp bài làm Toán lớp 5 để phát hiện lỗi và nhận gợi ý tự sửa.',
 })
 
 type Overlay = 'search' | 'notifications' | 'history' | 'tips' | 'saved' | 'hint' | 'progress' | 'profile' | null
@@ -45,16 +44,10 @@ const confirmedText = ref('')
 const unclearSegments = ref<string[]>([])
 const needsReview = ref(false)
 const ocrReview = ref<HTMLElement | null>(null)
-const solutionSteps = ref<MathStep[]>([])
-const finalAnswer = ref('')
-const { submit, confirm, solve } = useProblem()
+const workReview = ref<WorkReviewResult | null>(null)
+const { submit, confirm, review } = useProblem()
 
-const sampleQuestion = 'Một thửa vườn hình chữ nhật có chiều dài 18 m và chiều rộng 12 m. Người làm vườn muốn chia vườn thành các lô nhỏ đều nhau để trồng rau. Nếu mỗi lô có diện tích 6 m², thì vườn sẽ được chia thành bao nhiêu lô?'
-const exampleSteps = [
-  { title: 'Bước 1: Tính diện tích khu vườn', explanation: 'Diện tích hình chữ nhật = chiều dài × chiều rộng.', calculation: '18 × 12 = 216 m²' },
-  { title: 'Bước 2: Diện tích của mỗi lô nhỏ', explanation: 'Mỗi lô nhỏ có diện tích là 6 m².' },
-  { title: 'Bước 3: Tính số lô nhỏ', explanation: 'Số lô nhỏ = diện tích khu vườn ÷ diện tích mỗi lô.', calculation: '216 ÷ 6 = 36 (lô)' },
-]
+const sampleQuestion = 'Đề bài: Một thửa vườn dài 18 m, rộng 12 m. Chia vườn thành các lô 6 m². Hỏi có bao nhiêu lô?\n\nBài làm của em: Diện tích khu vườn là 18 + 12 = 30 m². Số lô là 30 : 6 = 5 (lô).'
 
 const displayName = computed(() => {
   const rawName = authStore.user?.name || 'Chào An!'
@@ -79,7 +72,7 @@ const recentLessons = [
 ] as const
 
 const utilityCards = [
-  { id: 'history', title: 'Lịch sử chat', text: 'Xem lại các câu hỏi đã hỏi', icon: History, className: 'is-blue' },
+  { id: 'history', title: 'Lịch sử chữa bài', text: 'Xem lại các bài đã kiểm tra', icon: History, className: 'is-blue' },
   { id: 'tips', title: 'Mẹo học hay', text: 'Bí quyết học tốt mỗi ngày', icon: Lightbulb, className: 'is-yellow' },
   { id: 'saved', title: 'Bài đã lưu', text: 'Xem lại các bài yêu thích', icon: Heart, className: 'is-pink' },
   { id: 'hint', title: 'Gợi ý nhanh', text: 'Các câu hỏi thường gặp', icon: Zap, className: 'is-orange' },
@@ -88,50 +81,45 @@ const utilityCards = [
 async function handleSubmit(payload: StudentQuestion) {
   isSubmitting.value = true
   notice.value = ''
-  solutionSteps.value = []
-  finalAnswer.value = ''
+  workReview.value = null
   try {
     const recognized = await submit(payload)
     problemId.value = recognized.problemId
     confirmedText.value = recognized.ocrText
     unclearSegments.value = recognized.unclearSegments
-    needsReview.value = !payload.image || recognized.needsConfirmation === true || recognized.unclearSegments.length > 0
-    if (!needsReview.value) {
-      notice.value = 'Ảnh rõ rồi — AI đang chuẩn bị lời giải cho em.'
-      await confirmAndSolve()
-      return
-    }
+    // A readable OCR result can still contain a wrong digit. Always let the learner
+    // compare the transcript with the source before sending it for assessment.
+    needsReview.value = true
     notice.value = recognized.unclearSegments.length
-      ? 'AI cần em kiểm tra vài chỗ được đánh dấu trước khi giải.'
-      : 'Em xem nhanh đề bài rồi bấm xác nhận để AI giải nhé.'
+      ? 'AI cần em kiểm tra vài chỗ chưa đọc rõ trước khi nhận xét.'
+      : 'Em xem lại đề và bài làm rồi bấm xác nhận nhé.'
     await nextTick()
     ocrReview.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } catch (error: any) {
-    notice.value = error?.data?.statusMessage || error?.message || 'Không thể gửi đề bài. Em hãy thử lại nhé.'
+    notice.value = error?.data?.statusMessage || error?.message || 'Không thể gửi bài làm. Em hãy thử lại nhé.'
   } finally {
     isSubmitting.value = false
   }
 }
 
-async function confirmAndSolve() {
+async function confirmAndReview() {
   if (!problemId.value) return
   isConfirming.value = true
   notice.value = ''
   try {
     await confirm(problemId.value, confirmedText.value)
-    const solution = await solve(problemId.value)
-    solutionSteps.value = solution.steps
-    finalAnswer.value = solution.finalAnswer || ''
-    if (solution.status === 'solved') {
+    const result = await review(problemId.value)
+    workReview.value = result
+    if (result.status === 'correct' || result.status === 'has_errors' || result.status === 'no_attempt') {
       unclearSegments.value = []
       needsReview.value = false
     } else {
-      unclearSegments.value = [solution.tip]
+      unclearSegments.value = [result.nextStep]
       needsReview.value = true
     }
-    notice.value = solution.tip
+    notice.value = result.summary
   } catch (error: any) {
-    notice.value = error?.data?.statusMessage || error?.message || 'Chưa thể tạo lời giải. Em hãy thử lại nhé.'
+    notice.value = error?.data?.statusMessage || error?.message || 'Chưa thể kiểm tra bài làm. Em hãy thử lại nhé.'
   } finally {
     isConfirming.value = false
   }
@@ -162,8 +150,8 @@ function handleNavigation(id: string) {
 
       <nav class="m5-top-nav" aria-label="Điều hướng chính">
         <button class="is-active" type="button" @click="handleNavigation('home')"><Home /> Trang chủ</button>
-        <button type="button" @click="handleNavigation('questions')"><MessageCircle /> Hỏi đáp với AI</button>
-        <button type="button" @click="openOverlay('history')"><History /> Lịch sử chat</button>
+        <button type="button" @click="handleNavigation('questions')"><MessageCircle /> AI chữa bài</button>
+        <button type="button" @click="openOverlay('history')"><History /> Lịch sử chữa bài</button>
         <button type="button" @click="openOverlay('tips')"><Lightbulb /> Mẹo học hay</button>
       </nav>
 
@@ -208,10 +196,10 @@ function handleNavigation(id: string) {
           <!-- <CatMascot class="m5-book-cat" pose="books" /> -->
           <BookSpread>
           <template #question>
-            <p class="m5-book-subtitle">Nhập bài toán hoặc chụp ảnh để AI hỗ trợ từng bước</p>
+            <p class="m5-book-subtitle">Chụp cả đề và phần em đã làm để AI tìm chỗ cần sửa</p>
             <div class="m5-problem">
               <div class="m5-problem__topline">
-                <span class="m5-problem__label">Bài toán Toán lớp 5</span>
+                <span class="m5-problem__label">Ví dụ bài làm cần kiểm tra</span>
                 <img src="/math5/decorations/leaf-sprig.svg" alt="" width="28" height="28" />
               </div>
               <p>{{ sampleQuestion }}</p>
@@ -219,18 +207,18 @@ function handleNavigation(id: string) {
             </div>
             <PhotoQuestionComposer :pending="isSubmitting" @submit="handleSubmit" />
             <div v-if="problemId && needsReview" ref="ocrReview" class="m5-ocr-review" tabindex="-1">
-              <div class="m5-ocr-review__heading"><span aria-hidden="true">🔎</span><div><strong>Kiểm tra đề trước khi giải</strong><small>AI giữ nguyên nội dung; em chỉ cần sửa nếu có chỗ sai.</small></div></div>
+              <div class="m5-ocr-review__heading"><span aria-hidden="true">🔎</span><div><strong>Xác nhận đề và bài làm</strong><small>Hãy sửa phần AI đọc sai chữ; đừng sửa lỗi Toán em muốn AI kiểm tra.</small></div></div>
               <div v-if="unclearSegments.length" class="m5-ocr-review__warning" role="alert"><strong>AI chưa chắc ở:</strong><ul><li v-for="segment in unclearSegments" :key="segment">{{ segment }}</li></ul></div>
-              <textarea v-model="confirmedText" rows="5" maxlength="5000" :disabled="isConfirming" aria-label="Xác nhận đề bài" />
-              <button type="button" :disabled="isConfirming" @click="confirmAndSolve">
-                {{ isConfirming ? 'Đang tạo lời giải...' : 'Đề đúng rồi, xem lời giải' }}
+              <textarea v-model="confirmedText" rows="5" maxlength="5000" :disabled="isConfirming" aria-label="Xác nhận đề và bài làm" />
+              <button type="button" :disabled="isConfirming" @click="confirmAndReview">
+                {{ isConfirming ? 'Đang kiểm tra bài...' : 'Nội dung đúng rồi, kiểm tra bài' }}
               </button>
             </div>
           </template>
 
           <template #answer>
-            <p class="m5-book-subtitle">Dưới đây là lời giải chi tiết, dễ hiểu từng bước:</p>
-            <SolutionSteps :steps="solutionSteps" :answer="finalAnswer" answer-prefix="Đáp số:" :pending="isConfirming" />
+            <p class="m5-book-subtitle">AI chỉ ra lỗi và gợi ý để em tự sửa:</p>
+            <WorkReview :review="workReview" :pending="isConfirming" />
           </template>
           </BookSpread>
           <p v-if="notice" class="m5-notice" role="status">{{ notice }}</p>
@@ -240,7 +228,7 @@ function handleNavigation(id: string) {
 
     <nav class="m5-bottom-nav" aria-label="Điều hướng mobile">
       <button class="is-current" type="button" @click="handleNavigation('home')"><Home /><span>Trang chủ</span></button>
-      <button type="button" @click="handleNavigation('questions')"><MessageCircle /><span>Hỏi đáp</span></button>
+      <button type="button" @click="handleNavigation('questions')"><MessageCircle /><span>Chữa bài</span></button>
       <button type="button" @click="openOverlay('history')"><Bookmark /><span>Lịch sử</span></button>
       <button type="button" @click="openOverlay('tips')"><Bell /><span>Mẹo hay</span></button>
       <button type="button" @click="openOverlay('profile')"><UserRound /><span>Hồ sơ</span></button>
