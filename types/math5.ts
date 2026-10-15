@@ -1,7 +1,10 @@
+export type ReviewProvider = 'openai' | 'gemini'
+
 export type StudentQuestion = {
   question: string
   image: File | null
   source: 'camera' | 'upload' | null
+  provider: ReviewProvider
 }
 
 export type ReviewStatus = 'correct' | 'has_errors' | 'needs_review' | 'no_attempt'
@@ -20,4 +23,31 @@ export type WorkReview = {
   strengths: string[]
   issues: ReviewIssue[]
   nextStep: string
+}
+
+export type AttemptReview = WorkReview & {
+  attemptId: string
+}
+
+export type ProblemHistoryItem = {
+  problemId: string
+  title: string
+  confirmedText: string
+  inputType: 'image' | 'text'
+  createdAt: string
+  status: string
+  review: (WorkReview & { provider: ReviewProvider }) | null
+  latestAttempt: {
+    submittedAnswer: string
+    verdict: 'ungraded' | 'correct' | 'incorrect' | 'needs_review'
+    feedback: string | null
+    createdAt: string
+  } | null
+  attempts: Array<{
+    submittedAnswer: string
+    verdict: 'ungraded' | 'correct' | 'incorrect' | 'needs_review'
+    feedback: string | null
+    createdAt: string
+  }>
+  attemptCount: number
 }

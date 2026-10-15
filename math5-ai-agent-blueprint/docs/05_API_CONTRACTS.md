@@ -24,14 +24,16 @@ If confidence/clarity insufficient, force manual correction. Preserve source ima
 Request `{"confirmedText":"..."}`. Owner only. Trims/validates length 10–5000 chars; nonempty, no model solve until confirmed; return updated problem. Do not overwrite original `ocr_text`.
 
 ### POST /api/problems/:id/solve (legacy path, work-review contract)
-Request `{"requestId":"uuid"}`. Owner only; `confirmed_text IS NOT NULL`; if a review already exists return it without consuming quota. The confirmed text must include the problem and the student's attempted work. The model identifies errors and gives a next-step hint; it must not return a full solution or final answer. Output is persisted to `ai_reviews`.
+Request `{"requestId":"uuid","provider":"openai"|"gemini"}`. Owner only; `confirmed_text IS NOT NULL`; if a review already exists for that provider return it without consuming quota. The confirmed text must include the problem and the student's attempted work. The model identifies errors and gives a next-step hint; it must not return a full solution or final answer. Output is persisted to `ai_reviews`. The provider is a server-validated enum and resolves to an environment-configured model; the client cannot send arbitrary model IDs.
 Response `{ "data": {"problemId":"uuid", "status":"has_errors", "summary":"...", "strengths":["..."], "issues":[{"location":"Dòng tính diện tích","studentWork":"18 + 12 = 30 m²","errorType":"reasoning","explanation":"...","hint":"..."}], "nextStep":"..."}, "requestId":"uuid"}`. Status is one of `correct|has_errors|needs_review|no_attempt`; it remains AI feedback and is not an authoritative grade.
 
-### POST /api/problems/:id/attempt
-Request `{"submittedAnswer":"90 kg"}`. Owner only. Assistance level must be derived by server from observed interactions (or explicitly reported as unverified), never accepted as an authoritative client-reported score. Store as `ungraded` initially. `verdict` can be set to `correct/incorrect` **only** via reliable grading pipeline; ambiguous answers -> `needs_review`. Do not let client choose verdict.
+### POST /api/problems/:id/attempts
+Request `{"answer":"...cách làm mới...","provider":"openai"|"gemini","requestId":"uuid"}`. Owner only and requires a saved AI review first. The server sends the confirmed original work, the previous feedback/latest retry, and the new answer as three clearly separated inputs. Only the new answer is graded. The client cannot choose `verdict` or assistance level.
+
+The response uses the same formative review shape as `/solve`, with an additional `attemptId`. Each submission is saved to `student_attempts`; `status=correct` maps to `verdict=correct`, `has_errors` maps to `incorrect`, and ambiguous output maps to `needs_review`. A wrong retry must receive another focused hint instead of the final answer.
 
 ### GET /api/problems?pageSize=20&cursor=...
-History for authenticated student only. Return minimal list (problemId, preview, createdAt, status, hasSolution, latestAttemptVerdict); do not ship full source images as public URLs.
+History for authenticated student only. The implemented first page accepts `pageSize=1..50` and returns each problem's confirmed text, latest AI review, all saved retry attempts, derived status and timestamps. This powers both the recent sidebar and the expandable chat-history dialog. Do not ship source images as public URLs. Add cursor pagination before histories can exceed the bounded first page.
 
 ### GET /api/problems/:id
 Owner or authorized teacher. Returns problem, solution, attempts; signed image URL only through separate server route after same permission check.

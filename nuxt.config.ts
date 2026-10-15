@@ -64,6 +64,8 @@ export default defineNuxtConfig({
     openaiApiKey: process.env.NUXT_OPENAI_API_KEY,
     openaiVisionModel: process.env.NUXT_OPENAI_VISION_MODEL,
     openaiSolveModel: process.env.NUXT_OPENAI_SOLVE_MODEL,
+    geminiApiKey: process.env.NUXT_GEMINI_API_KEY,
+    geminiSolveModel: process.env.NUXT_GEMINI_SOLVE_MODEL,
     supabaseSecretKey: process.env.NUXT_SUPABASE_SECRET_KEY,
     aiDailyOcrLimit: Number(process.env.NUXT_AI_DAILY_OCR_LIMIT || 20),
     aiDailySolveLimit: Number(process.env.NUXT_AI_DAILY_SOLVE_LIMIT || 15),

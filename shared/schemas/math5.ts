@@ -16,8 +16,21 @@ export const ConfirmProblemSchema = z.object({
   confirmedText: z.string().trim().min(10).max(5000),
 })
 
+export const ReviewProviderSchema = z.enum(['openai', 'gemini'])
+
 export const SolveProblemSchema = z.object({
   requestId: RequestIdSchema,
+  provider: ReviewProviderSchema,
+})
+
+export const RetryProblemSchema = z.object({
+  requestId: RequestIdSchema,
+  provider: ReviewProviderSchema,
+  answer: z.string().trim().min(2).max(5000),
+})
+
+export const ProblemHistoryQuerySchema = z.object({
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
 })
 
 export const OcrResultSchema = z.object({
@@ -45,3 +58,4 @@ export const WorkReviewResultSchema = z.object({
 export type OcrResult = z.infer<typeof OcrResultSchema>
 export type ReviewIssue = z.infer<typeof ReviewIssueSchema>
 export type WorkReviewResult = z.infer<typeof WorkReviewResultSchema>
+export type ReviewProvider = z.infer<typeof ReviewProviderSchema>

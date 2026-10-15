@@ -1,6 +1,7 @@
 import { SolveProblemSchema } from '~/shared/schemas/math5'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
 import { reviewMathWork } from '~/server/utils/math5-openai'
+import { reviewMathWorkWithGemini } from '~/server/utils/math5-gemini'
 import { reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
 import { requireMath5Student } from '~/server/utils/math5-user'
@@ -25,6 +26,7 @@ export default defineEventHandler(async (event) => {
     .from('ai_reviews')
     .select('status, summary, strengths, issues, next_step')
     .eq('problem_id', problem.id)
+    .eq('provider', parsed.data.provider)
     .maybeSingle()
   if (cachedError) {
     console.error('[math5] ai_reviews lookup failed', { code: cachedError.code, message: cachedError.message })
@@ -37,12 +39,15 @@ export default defineEventHandler(async (event) => {
   await reserveMath5Quota(student.id, 'solve')
   let generated
   try {
-    generated = await reviewMathWork(problem.confirmed_text)
+    generated = parsed.data.provider === 'gemini'
+      ? await reviewMathWorkWithGemini(problem.confirmed_text)
+      : await reviewMathWork(problem.confirmed_text)
   } catch (error) {
-    return asPublicModelError(error)
+    return asPublicModelError(error, parsed.data.provider)
   }
   const { error: saveError } = await admin.from('ai_reviews').insert({
     problem_id: problem.id,
+    provider: parsed.data.provider,
     status: generated.result.status,
     summary: generated.result.summary,
     strengths: generated.result.strengths,

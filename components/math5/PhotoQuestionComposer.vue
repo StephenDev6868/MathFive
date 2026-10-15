@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, watch } from 'vue'
 import { Camera, ImageUp, Send, X, FileImage } from 'lucide-vue-next'
-import type { StudentQuestion } from '~/types/math5'
-const emit = defineEmits<{ submit: [payload: StudentQuestion] }>()
+import type { ReviewProvider, StudentQuestion } from '~/types/math5'
+const emit = defineEmits<{
+  submit: [payload: StudentQuestion]
+  draft: [payload: Pick<StudentQuestion, 'question' | 'image'>]
+}>()
 withDefaults(defineProps<{ pending?: boolean }>(), { pending: false })
 const cameraInput = ref<HTMLInputElement | null>(null)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const question = ref('')
+const provider = ref<ReviewProvider>('openai')
 const image = ref<File | null>(null)
 const imageSource = ref<StudentQuestion['source']>(null)
 const previewUrl = ref<string | null>(null)
@@ -14,13 +18,17 @@ const error = ref('')
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
 const ACCEPTED_TYPES = new Set(['image/jpeg','image/png','image/webp'])
 
-function clearPreview() {
+function emitDraft() {
+  emit('draft', { question: question.value, image: image.value })
+}
+function clearPreview(notify = true) {
   if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
   previewUrl.value = null
   image.value = null
   imageSource.value = null
   if (cameraInput.value) cameraInput.value.value = ''
   if (uploadInput.value) uploadInput.value.value = ''
+  if (notify) emitDraft()
 }
 function onChoose(event: Event, source: 'camera' | 'upload') {
   error.value = ''
@@ -28,10 +36,11 @@ function onChoose(event: Event, source: 'camera' | 'upload') {
   if (!file) return
   if (!ACCEPTED_TYPES.has(file.type)) { error.value = 'Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.'; return }
   if (file.size > MAX_IMAGE_BYTES) { error.value = 'Ảnh tối đa 5 MB, hãy thử ảnh khác nhé.'; return }
-  clearPreview()
+  clearPreview(false)
   image.value = file
   imageSource.value = source
   previewUrl.value = URL.createObjectURL(file)
+  emitDraft()
 }
 function submit() {
   error.value = ''
@@ -39,9 +48,10 @@ function submit() {
     error.value = 'Em hãy nhập đề kèm bài làm hoặc chọn ảnh vở bài tập nhé!'
     return
   }
-  emit('submit', { question: question.value.trim(), image: image.value, source: imageSource.value })
+  emit('submit', { question: question.value.trim(), image: image.value, source: imageSource.value, provider: provider.value })
 }
-onBeforeUnmount(clearPreview)
+watch(question, emitDraft)
+onBeforeUnmount(() => clearPreview(false))
 </script>
 
 <template>
@@ -64,13 +74,20 @@ onBeforeUnmount(clearPreview)
       <FileImage :size="18" aria-hidden="true" />
       <img :src="previewUrl" :alt="'Ảnh bài tập: ' + image.name" />
       <span>{{ image.name }}</span>
-      <button type="button" aria-label="Bỏ ảnh" @click="clearPreview"><X :size="18" /></button>
+      <button type="button" aria-label="Bỏ ảnh" @click="clearPreview()"><X :size="18" /></button>
     </div>
 
     <!-- Row 2: independent full-width chat entry -->
     <label class="m5-composer__chat-row">
       <span class="m5-sr-only">Nhập đề và bài làm Toán lớp 5</span>
       <textarea v-model="question" rows="2" maxlength="3000" :disabled="pending" placeholder="Hoặc nhập đề bài và cách em đã làm..." />
+    </label>
+    <label class="m5-composer__model-row">
+      <span>Model chữa bài</span>
+      <select v-model="provider" :disabled="pending" aria-label="Chọn model chữa bài">
+        <option value="openai">OpenAI</option>
+        <option value="gemini">Google Gemini</option>
+      </select>
     </label>
     <p v-if="error" class="m5-composer__error" role="alert">{{ error }}</p>
     <button class="m5-composer__send" type="button" :disabled="pending" @click="submit">
