@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { BookOpenCheck, ChevronDown, ChevronUp, Search, Sparkles } from 'lucide-vue-next'
+import { mathTipLessons } from '~/data/math-tip-lessons'
 
 type TipCategory = 'numbers' | 'fractions' | 'decimals' | 'percent' | 'units' | 'geometry' | 'word' | 'motion'
 type MathTip = {
-  id: string
+  id: keyof typeof mathTipLessons
   category: TipCategory
   emoji: string
   title: string
@@ -69,11 +70,14 @@ const tips: MathTip[] = [
 const activeCategory = ref<(typeof categories)[number]['id']>('all')
 const keyword = ref('')
 const openTip = ref<string | null>(null)
+const detailedTips = tips.map(tip => ({ ...tip, lesson: mathTipLessons[tip.id] }))
 const filteredTips = computed(() => {
   const query = keyword.value.trim().toLocaleLowerCase('vi')
-  return tips.filter((tip) => {
+  return detailedTips.filter((tip) => {
     const categoryMatches = activeCategory.value === 'all' || tip.category === activeCategory.value
-    const textMatches = !query || [tip.title, tip.formula, tip.note, tip.example]
+    const textMatches = !query || [tip.title, tip.formula, tip.note, tip.example,
+      tip.lesson.explanation, ...tip.lesson.steps, tip.lesson.mistake,
+      ...tip.lesson.examples.flatMap(example => [example.problem, ...example.solution, example.answer, example.check])]
       .some(value => value.toLocaleLowerCase('vi').includes(query))
     return categoryMatches && textMatches
   })
@@ -84,15 +88,15 @@ const filteredTips = computed(() => {
   <div class="m5-tips-library">
     <span class="m5-tips-library__icon"><BookOpenCheck /></span>
     <h2>Mẹo Toán lớp 5</h2>
-    <p class="m5-tips-library__intro">Công thức ngắn gọn, ví dụ dễ nhớ. Chọn một chủ đề để học nhanh nhé!</p>
+    <p class="m5-tips-library__intro">Chọn một mẹo để xem cách làm, ví dụ giải từng bước và những lỗi cần tránh.</p>
 
     <label class="m5-tips-search">
       <Search :size="17" aria-hidden="true" />
-      <input v-model="keyword" placeholder="Tìm: phân số, diện tích, phần trăm..." />
+      <input v-model="keyword" type="search" aria-label="Tìm mẹo Toán" placeholder="Tìm: phân số, diện tích, phần trăm..." />
     </label>
 
     <div class="m5-tips-categories" aria-label="Chủ đề Toán lớp 5">
-      <button v-for="category in categories" :key="category.id" type="button" :class="{ 'is-active': activeCategory === category.id }" @click="activeCategory = category.id">
+      <button v-for="category in categories" :key="category.id" type="button" :class="{ 'is-active': activeCategory === category.id }" :aria-pressed="activeCategory === category.id" @click="activeCategory = category.id">
         <span>{{ category.emoji }}</span>{{ category.label }}
       </button>
     </div>
@@ -100,15 +104,31 @@ const filteredTips = computed(() => {
     <p v-if="!filteredTips.length" class="m5-tips-empty">Chưa tìm thấy mẹo phù hợp. Em thử từ khóa khác nhé!</p>
     <div v-else class="m5-tips-grid">
       <article v-for="tip in filteredTips" :key="tip.id" class="m5-tip-card" :class="`is-${tip.category}`">
-        <button type="button" class="m5-tip-card__toggle" @click="openTip = openTip === tip.id ? null : tip.id">
+        <button type="button" class="m5-tip-card__toggle" :aria-expanded="openTip === tip.id" :aria-controls="`m5-tip-${tip.id}`" @click="openTip = openTip === tip.id ? null : tip.id">
           <span class="m5-tip-card__emoji">{{ tip.emoji }}</span>
           <span><strong>{{ tip.title }}</strong><small>{{ tip.formula }}</small></span>
           <ChevronUp v-if="openTip === tip.id" :size="17" />
           <ChevronDown v-else :size="17" />
         </button>
-        <div v-if="openTip === tip.id" class="m5-tip-card__details">
-          <p><Sparkles :size="14" /><span><b>Cách nhớ:</b> {{ tip.note }}</span></p>
-          <p class="m5-tip-card__example"><b>Ví dụ:</b> {{ tip.example }}</p>
+        <div v-if="openTip === tip.id" :id="`m5-tip-${tip.id}`" class="m5-tip-card__details">
+          <p class="m5-tip-card__memory"><Sparkles :size="16" /><span><b>Cách nhớ:</b> {{ tip.note }}</span></p>
+          <section class="m5-tip-lesson">
+            <h3>Hiểu cách làm</h3>
+            <p>{{ tip.lesson.explanation }}</p>
+            <h3>Các bước thực hiện</h3>
+            <ol><li v-for="step in tip.lesson.steps" :key="step">{{ step }}</li></ol>
+          </section>
+          <section v-for="(example, index) in tip.lesson.examples" :key="example.problem" class="m5-tip-worked-example">
+            <h3>Ví dụ {{ index + 1 }} · Giải từng bước</h3>
+            <p class="m5-tip-worked-example__problem">{{ example.problem }}</p>
+            <ol><li v-for="step in example.solution" :key="step">{{ step }}</li></ol>
+            <p class="m5-tip-worked-example__answer"><b>Đáp số:</b> {{ example.answer }}</p>
+            <p class="m5-tip-worked-example__check"><b>Kiểm tra lại:</b> {{ example.check }}</p>
+          </section>
+          <section class="m5-tip-mistake">
+            <h3>Lỗi dễ mắc</h3>
+            <p>{{ tip.lesson.mistake }}</p>
+          </section>
         </div>
       </article>
     </div>
@@ -116,12 +136,48 @@ const filteredTips = computed(() => {
 </template>
 
 <style scoped>
-.m5-tips-library{min-height:0;display:flex;flex:1;flex-direction:column;color:var(--m5-ink)}
+.m5-tips-library{width:100%;min-width:0;min-height:0;display:flex;flex:1;flex-direction:column;overflow:hidden;color:var(--m5-ink)}
 .m5-tips-library__icon{width:55px;height:55px;margin:0 auto 7px;display:grid;place-items:center;flex:none;border-radius:17px;background:#fff0bd;color:#d58c00}
 .m5-tips-library h2{margin:0;text-align:center;font:800 27px/1.1 var(--m5-heading)}
 .m5-tips-library__intro{margin:6px auto 12px;max-width:470px;color:#72798a;font-size:11px;font-weight:700;text-align:center}
-.m5-tips-search{position:relative;display:block;flex:none}.m5-tips-search svg{position:absolute;left:12px;top:12px;color:#77849a}.m5-tips-search input{width:100%;height:41px;padding:8px 12px 8px 37px;border:1.5px solid #d4dce8;border-radius:12px;outline:0;background:#fff;font-size:11px;font-weight:700}.m5-tips-search input:focus{border-color:#efb42f;box-shadow:0 0 0 3px rgba(239,180,47,.16)}
-.m5-tips-categories{display:flex;gap:6px;margin:9px 0;overflow-x:auto;padding:1px 1px 5px;scrollbar-width:thin}.m5-tips-categories button{min-width:max-content;height:31px;display:flex;align-items:center;gap:4px;padding:0 9px;border:1px solid #e2ded7;border-radius:999px;background:#fff;color:#60697b;font-size:9px;font-weight:900}.m5-tips-categories button.is-active{border-color:#f0b235;background:#fff3ca;color:#8b5c00}.m5-tips-categories button span{font-size:12px}
-.m5-tips-grid{min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:auto;padding:1px 4px 3px 1px;scrollbar-width:thin;scrollbar-color:#d8c7b5 transparent}.m5-tip-card{align-self:start;overflow:hidden;border:1px solid #dce6ef;border-left:4px solid #72a8dc;border-radius:12px;background:#fff}.m5-tip-card.is-fractions,.m5-tip-card.is-percent{border-left-color:#ed8c7a}.m5-tip-card.is-units,.m5-tip-card.is-motion{border-left-color:#76bca8}.m5-tip-card.is-geometry{border-left-color:#e8ad32}.m5-tip-card.is-word{border-left-color:#9a89d5}.m5-tip-card__toggle{width:100%;min-height:61px;display:grid;grid-template-columns:31px minmax(0,1fr) 17px;align-items:center;gap:7px;padding:8px;border:0;background:transparent;color:inherit;text-align:left}.m5-tip-card__emoji{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:#f2f7fc;font-size:17px}.m5-tip-card__toggle strong,.m5-tip-card__toggle small{display:block}.m5-tip-card__toggle strong{font-size:10px}.m5-tip-card__toggle small{margin-top:3px;color:#d6533e;font-size:9px;font-weight:900;line-height:1.3}.m5-tip-card__toggle>svg{color:#8992a2}.m5-tip-card__details{padding:0 9px 9px;border-top:1px dashed #e4e6e8}.m5-tip-card__details p{display:flex;align-items:flex-start;gap:5px;margin:7px 0 0;color:#596174;font-size:9px;font-weight:700;line-height:1.4}.m5-tip-card__details svg{flex:none;color:#eaaa1f}.m5-tip-card__example{padding:6px;border-radius:8px;background:#f5f8fc}.m5-tips-empty{margin:20px 0;padding:16px;border-radius:13px;background:#fff5d9;color:#79622e;font-size:11px;font-weight:800;text-align:center}
-@media(max-width:600px){.m5-tips-library h2{font-size:24px}.m5-tips-library__intro{font-size:10px}.m5-tips-grid{grid-template-columns:1fr}.m5-tip-card__toggle strong{font-size:12px}.m5-tip-card__toggle small,.m5-tip-card__details p{font-size:10px}.m5-tips-categories button{height:34px;font-size:10px}}
+.m5-tips-search{position:relative;display:block;min-width:0;flex:none}.m5-tips-search svg{position:absolute;left:12px;top:12px;color:#77849a}.m5-tips-search input{width:100%;height:41px;padding:8px 12px 8px 37px;border:1.5px solid #d4dce8;border-radius:12px;outline:0;background:#fff;font-size:11px;font-weight:700}.m5-tips-search input:focus{border-color:#efb42f;box-shadow:0 0 0 3px rgba(239,180,47,.16)}
+.m5-tips-categories{width:100%;min-width:0;display:flex;gap:6px;margin:9px 0;overflow-x:auto;overscroll-behavior-x:contain;padding:1px 1px 5px;scrollbar-width:thin}.m5-tips-categories button{min-width:max-content;height:31px;display:flex;align-items:center;gap:4px;padding:0 9px;border:1px solid #e2ded7;border-radius:999px;background:#fff;color:#60697b;font-size:9px;font-weight:900}.m5-tips-categories button.is-active{border-color:#f0b235;background:#fff3ca;color:#8b5c00}.m5-tips-categories button span{font-size:12px}
+.m5-tips-grid{width:100%;min-width:0;min-height:0;display:grid;flex:1 1 0;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:7px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:1px 4px 3px 1px;scrollbar-width:thin;scrollbar-color:#d8c7b5 transparent}.m5-tip-card{min-width:0;height:max-content;align-self:start;overflow:hidden;border:1px solid #dce6ef;border-left:4px solid #72a8dc;border-radius:12px;background:#fff}.m5-tip-card.is-fractions,.m5-tip-card.is-percent{border-left-color:#ed8c7a}.m5-tip-card.is-units,.m5-tip-card.is-motion{border-left-color:#76bca8}.m5-tip-card.is-geometry{border-left-color:#e8ad32}.m5-tip-card.is-word{border-left-color:#9a89d5}.m5-tip-card__toggle{width:100%;min-width:0;min-height:61px;display:grid;grid-template-columns:31px minmax(0,1fr) 17px;align-items:center;gap:7px;padding:8px;border:0;background:transparent;color:inherit;text-align:left}.m5-tip-card__toggle>span:nth-child(2){min-width:0}.m5-tip-card__emoji{width:31px;height:31px;display:grid;place-items:center;border-radius:9px;background:#f2f7fc;font-size:17px}.m5-tip-card__toggle strong,.m5-tip-card__toggle small{display:block;overflow-wrap:anywhere}.m5-tip-card__toggle strong{font-size:10px}.m5-tip-card__toggle small{margin-top:3px;color:#d6533e;font-size:9px;font-weight:900;line-height:1.3}.m5-tip-card__toggle>svg{color:#8992a2}.m5-tip-card__details{padding:0 9px 9px;border-top:1px dashed #e4e6e8}.m5-tip-card__details p{display:flex;align-items:flex-start;gap:5px;margin:7px 0 0;color:#596174;font-size:9px;font-weight:700;line-height:1.4}.m5-tip-card__details svg{flex:none;color:#eaaa1f}.m5-tip-card__example{padding:6px;border-radius:8px;background:#f5f8fc}.m5-tips-empty{margin:20px 0;padding:16px;border-radius:13px;background:#fff5d9;color:#79622e;font-size:11px;font-weight:800;text-align:center}
+@media(max-width:767px){
+  .m5-tips-library__icon{width:42px;height:42px;margin-bottom:4px;border-radius:13px}.m5-tips-library__icon svg{width:22px;height:22px}
+  .m5-tips-library h2{padding:0 42px;font-size:23px}
+  .m5-tips-library__intro{margin:3px auto 10px;max-width:310px;padding:0 8px;font-size:11px;line-height:1.35}
+  .m5-tips-search svg{left:14px;top:14px}.m5-tips-search input{height:45px;padding-left:40px;border-radius:13px;font-size:13px}
+  .m5-tips-categories{gap:7px;margin:8px 0;padding:1px 1px 7px;scroll-snap-type:x proximity;scrollbar-width:none}.m5-tips-categories::-webkit-scrollbar{display:none}.m5-tips-categories button{height:40px;padding:0 12px;scroll-snap-align:start;font-size:12px}.m5-tips-categories button span{font-size:15px}
+  .m5-tips-grid{grid-template-columns:1fr;gap:9px;padding:1px 2px calc(8px + env(safe-area-inset-bottom)) 1px}
+  .m5-tip-card{border-radius:14px}.m5-tip-card__toggle{min-height:68px;grid-template-columns:40px minmax(0,1fr) 20px;gap:10px;padding:10px}.m5-tip-card__emoji{width:40px;height:40px;border-radius:11px;font-size:20px}.m5-tip-card__toggle strong{font-size:14px;line-height:1.25}.m5-tip-card__toggle small{font-size:11px;line-height:1.35}.m5-tip-card__details{padding:0 11px 11px}.m5-tip-card__details p{font-size:11px;line-height:1.5}.m5-tip-card__example{padding:8px}
+}
+</style>
+
+<style scoped>
+/* Keep the controls visible while long lessons scroll in the results area. */
+.m5-tips-library h2,.m5-tips-library__intro,.m5-tips-categories{flex-shrink:0}
+.m5-tip-card__details{padding:12px;overflow-wrap:anywhere}
+.m5-tip-card__details p{display:block;font-size:13px;line-height:1.65;font-weight:600}
+.m5-tip-card__details .m5-tip-card__memory{display:flex;margin:0;gap:7px}
+.m5-tip-card__memory svg{margin-top:3px}
+.m5-tip-card__details h3{margin:0 0 7px;color:var(--m5-ink);font-size:14px;font-weight:900;line-height:1.4}
+.m5-tip-lesson,.m5-tip-worked-example,.m5-tip-mistake{margin-top:14px}
+.m5-tip-lesson h3:not(:first-child){margin-top:14px}
+.m5-tip-card__details ol{margin:7px 0 0;padding-left:23px;color:#4a5269;font-size:13px;font-weight:600;line-height:1.65}
+.m5-tip-card__details li{padding-left:3px}
+.m5-tip-card__details li+li{margin-top:8px}
+.m5-tip-card__details li::marker{color:#347dc2;font-weight:900}
+.m5-tip-worked-example{padding:12px;border:1px solid #dce6ef;border-radius:12px;background:#f5f8fc}
+.m5-tip-card__details .m5-tip-worked-example__problem{color:var(--m5-ink);font-weight:800}
+.m5-tip-card__details .m5-tip-worked-example__answer{padding:9px;margin-top:12px;border-radius:8px;background:#e7f5ee;color:#236c53}
+.m5-tip-card__details .m5-tip-worked-example__check{margin-top:10px}
+.m5-tip-mistake{padding:12px;border-radius:12px;background:#fff4dc}
+.m5-tip-mistake h3{color:#8b5c00}
+@media(max-width:767px){
+  .m5-tip-card__details{padding:12px}
+  .m5-tip-card__details p,.m5-tip-card__details ol{font-size:14px}
+  .m5-tip-card__details h3{font-size:15px}
+  .m5-tips-search input{font-size:16px}
+}
 </style>
