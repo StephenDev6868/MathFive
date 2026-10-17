@@ -7,33 +7,40 @@ import { requireMath5Student } from '~/server/utils/math5-user'
 
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const maxImageBytes = 5 * 1024 * 1024
+const maxTotalImageBytes = 15 * 1024 * 1024
 
 export default defineEventHandler(async (event) => {
   const student = await requireMath5Student(event)
   const parsed = RecognizeProblemSchema.safeParse(await readBody(event))
-  if (!parsed.success) math5Error(400, 'Đường dẫn ảnh hoặc mã yêu cầu không hợp lệ.')
-  if (!parsed.data.imagePath.startsWith(`${student.id}/`)) math5Error(403, 'Em không có quyền dùng ảnh này.')
+  if (!parsed.success) math5Error(400, 'Danh sách ảnh hoặc mã yêu cầu không hợp lệ.')
+  if (parsed.data.imagePaths.some(imagePath => !imagePath.startsWith(`${student.id}/`))) math5Error(403, 'Em không có quyền dùng ảnh này.')
 
   const admin = useMath5SupabaseAdmin()
   const { data: existing } = await admin
     .from('math_problems')
     .select('id, ocr_text, status')
     .eq('student_id', student.id)
-    .eq('image_path', parsed.data.imagePath)
+    .eq('image_path', parsed.data.imagePaths[0])
     .maybeSingle()
   if (existing?.ocr_text) {
     return { data: { problemId: existing.id, ocrText: existing.ocr_text, unclearSegments: [], status: existing.status }, requestId: parsed.data.requestId }
   }
 
-  const { data: file, error: downloadError } = await admin.storage.from('math-problems').download(parsed.data.imagePath)
-  if (downloadError || !file) math5Error(404, 'Không tìm thấy ảnh bài tập.')
-  if (!allowedTypes.has(file.type) || file.size > maxImageBytes) math5Error(413, 'Ảnh phải là JPG, PNG hoặc WebP và không quá 5 MB.')
+  const files = await Promise.all(parsed.data.imagePaths.map(async (imagePath) => {
+    const { data: file, error: downloadError } = await admin.storage.from('math-problems').download(imagePath)
+    if (downloadError || !file) math5Error(404, 'Không tìm thấy ảnh bài tập.')
+    if (!allowedTypes.has(file.type) || file.size > maxImageBytes) math5Error(413, 'Mỗi ảnh phải là JPG, PNG hoặc WebP và không quá 5 MB.')
+    return file
+  }))
+  if (files.reduce((total, file) => total + file.size, 0) > maxTotalImageBytes) math5Error(413, 'Tổng dung lượng ảnh tối đa là 15 MB.')
 
   await reserveMath5Quota(student.id, 'ocr')
   let recognized
   try {
-    const imageDataUrl = `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString('base64')}`
-    recognized = await recognizeMathProblem(imageDataUrl)
+    const imageDataUrls = await Promise.all(files.map(async file =>
+      `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString('base64')}`
+    ))
+    recognized = await recognizeMathProblem(imageDataUrls)
   } catch (error) {
     return asPublicModelError(error)
   }
@@ -43,7 +50,7 @@ export default defineEventHandler(async (event) => {
     .insert({
       student_id: student.id,
       input_type: 'image',
-      image_path: parsed.data.imagePath,
+      image_path: parsed.data.imagePaths[0],
       ocr_text: recognized.result.recognizedText,
       status: 'recognized',
     })

@@ -1,16 +1,30 @@
 <script setup lang="ts">
 import { CheckCircle2, RotateCcw, Send, Sparkles } from 'lucide-vue-next'
-import type { ReviewIssue, WorkReview } from '~/types/math5'
+import type { WorkReview } from '~/types/math5'
 
 type RetryTask = {
   id: string
   label: string
-  kind: 'cloze' | 'short-answer'
-  prefix?: string
-  suffix?: string
   prompt: string
   hint: string
+  inputType: 'math' | 'explanation' | 'solution'
 }
+
+type FractionPart = { numerator: string, denominator: string }
+type SolutionPart = { calculation: string, explanation: string }
+
+const mathSymbols = [
+  { value: '+', label: 'Dấu cộng' },
+  { value: '−', label: 'Dấu trừ' },
+  { value: '×', label: 'Dấu nhân' },
+  { value: '÷', label: 'Dấu chia' },
+  { value: '=', label: 'Dấu bằng' },
+  { value: '(', label: 'Mở ngoặc' },
+  { value: ')', label: 'Đóng ngoặc' },
+  { value: '%', label: 'Phần trăm' },
+  { value: '²', label: 'Bình phương' },
+  { value: '√', label: 'Căn bậc hai' },
+]
 
 const props = withDefaults(defineProps<{
   review: WorkReview
@@ -22,59 +36,97 @@ const emit = defineEmits<{
   submit: [answer: string]
 }>()
 const responses = ref<string[]>([])
+const fractions = ref<FractionPart[]>([])
+const solutions = ref<SolutionPart[]>([])
 const localError = ref('')
 
-function equationTask(issue: ReviewIssue, index: number): RetryTask | null {
-  const work = issue.studentWork.replace(/\s+/g, ' ').trim()
-  const equalsAt = work.lastIndexOf('=')
-  if (equalsAt < 1 || equalsAt === work.length - 1) return null
-
-  const rightSide = work.slice(equalsAt + 1).trim()
-  const result = rightSide.match(/^([+-]?(?:\d+\s*\/\s*\d+|(?:\d{1,3}(?:[ .]\d{3})+|\d+)(?:[,.]\d+)?))\s*(.*)$/u)
-  if (!result) return null
-  const suffix = result[2]?.trim() || ''
-  if (/[\d+×x:*÷/=]/u.test(suffix)) return null
-
-  return {
-    id: `${index}-${issue.location}-${issue.studentWork}`,
-    label: issue.location,
-    kind: 'cloze',
-    prefix: `${work.slice(0, equalsAt).trim()} =`,
-    suffix,
-    prompt: 'Điền kết quả đúng vào ô trống',
-    hint: issue.hint,
-  }
-}
-
 const tasks = computed<RetryTask[]>(() => {
+  if (props.review.retryTasks?.length) {
+    return props.review.retryTasks.map((task, index) => ({
+      id: `${index}-${task.title}-${task.instruction}`,
+      label: task.title,
+      prompt: task.instruction,
+      hint: task.hint,
+      inputType: task.responseType || 'explanation',
+    }))
+  }
   if (!props.review.issues.length) {
     return [{
       id: `next-${props.review.nextStep}`,
       label: 'Bước tiếp theo',
-      kind: 'short-answer',
       prompt: props.review.nextStep,
       hint: 'Viết ngắn gọn phép tính hoặc kết quả em tự tìm được.',
+      inputType: 'math',
     }]
   }
 
-  return props.review.issues.map((issue, index) => equationTask(issue, index) || ({
+  return props.review.issues.map((issue, index) => ({
     id: `${index}-${issue.location}-${issue.studentWork}`,
     label: issue.location,
-    kind: 'short-answer' as const,
-    prompt: `Viết lại phần “${issue.location}”`,
+    prompt: `Làm lại phần “${issue.location}” theo gợi ý`,
     hint: issue.hint,
+    inputType: issue.errorType === 'calculation'
+      ? 'math'
+      : issue.errorType === 'reasoning'
+        ? 'solution'
+        : 'explanation',
   }))
 })
 
 const taskVersion = computed(() => `${props.attemptCount}:${tasks.value.map(task => task.id).join('|')}`)
 watch(taskVersion, () => {
   responses.value = tasks.value.map(() => '')
+  fractions.value = tasks.value.map(() => ({ numerator: '', denominator: '' }))
+  solutions.value = tasks.value.map(() => ({ calculation: '', explanation: '' }))
   localError.value = ''
 }, { immediate: true })
 
 function updateResponse(index: number, event: Event) {
-  responses.value[index] = (event.target as HTMLInputElement).value
+  responses.value[index] = (event.target as HTMLInputElement | HTMLTextAreaElement).value
   localError.value = ''
+}
+
+function addSymbol(index: number, symbol: string) {
+  if (tasks.value[index]?.inputType === 'solution') {
+    const solution = solutions.value[index]!
+    solution.calculation = `${solution.calculation}${symbol}`
+    syncSolution(index)
+    return
+  }
+  responses.value[index] = `${responses.value[index] || ''}${symbol}`
+  localError.value = ''
+}
+
+function updateSolution(index: number, field: keyof SolutionPart, event: Event) {
+  solutions.value[index]![field] = (event.target as HTMLInputElement | HTMLTextAreaElement).value
+  syncSolution(index)
+}
+
+function syncSolution(index: number) {
+  const solution = solutions.value[index]!
+  responses.value[index] = `Phép tính: ${solution.calculation}\nLời giải: ${solution.explanation}`.trim()
+  localError.value = ''
+}
+
+function addFraction(index: number) {
+  const fraction = fractions.value[index]
+  if (!fraction?.numerator.trim() || !fraction.denominator.trim()) {
+    localError.value = 'Em điền cả tử số và mẫu số rồi chèn phân số nhé.'
+    return
+  }
+  addSymbol(index, `(${fraction.numerator}/${fraction.denominator})`)
+  fractions.value[index] = { numerator: '', denominator: '' }
+}
+
+function formatMath(value: string) {
+  const escaped = value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+  return escaped.replace(/\(?(-?\d+(?:[,.]\d+)?)\s*\/\s*(-?\d+(?:[,.]\d+)?)\)?/g, (_match, numerator, denominator) => (
+    `<span class="m5-math-fraction"><sup>${numerator}</sup><i></i><sub>${denominator}</sub></span>`
+  )) || '<span class="m5-math-preview__placeholder">Ví dụ: 2/3 sẽ hiện thành phân số</span>'
 }
 
 function submitAttempt() {
@@ -88,9 +140,6 @@ function submitAttempt() {
 
   const answer = tasks.value.map((task, index) => {
     const value = responses.value[index]!.trim()
-    if (task.kind === 'cloze') {
-      return `${task.prefix} ${value}${task.suffix ? ` ${task.suffix}` : ''}`
-    }
     return `${task.label}: ${value}`
   }).join('\n')
   emit('submit', answer)
@@ -103,7 +152,7 @@ function submitAttempt() {
       <span><RotateCcw :size="18" aria-hidden="true" /></span>
       <div>
         <h3 id="m5-retry-title">Đến lượt em sửa lại</h3>
-        <p>AI đã tạo bài điền khuyết từ chính chỗ em làm chưa đúng.</p>
+        <p>Làm từng bước theo gợi ý rồi tự kiểm tra lại nhé.</p>
       </div>
     </div>
 
@@ -114,31 +163,81 @@ function submitAttempt() {
           <strong>{{ task.label }}</strong>
         </div>
         <p class="m5-retry-task__prompt"><Sparkles :size="14" /> {{ task.prompt }}</p>
-        <label v-if="task.kind === 'cloze'" class="m5-retry-task__equation">
-          <span>{{ task.prefix }}</span>
-          <input
+        <input type="hidden" :value="responses[index]" :name="`retry-answer-${index}`" />
+        <div class="m5-notebook-paper" :class="`is-${task.inputType}`">
+          <template v-if="task.inputType === 'solution'">
+            <div class="m5-notebook-paper__line m5-notebook-paper__line--solution">
+              <strong>Lời giải:</strong>
+              <textarea
+                :value="solutions[index]?.explanation || ''"
+                :disabled="pending"
+                class="m5-notebook-paper__native-text"
+                rows="2"
+                placeholder="Em viết lời giải và câu trả lời ở đây..."
+                aria-label="Viết lại lời giải"
+                @input="updateSolution(index, 'explanation', $event)"
+              />
+            </div>
+            <div class="m5-notebook-paper__line m5-notebook-paper__line--calculation">
+              <strong>Phép tính:</strong>
+              <div class="m5-math-preview">
+                <div v-html="formatMath(solutions[index]?.calculation || '')" aria-hidden="true" />
+                <input
+                  :value="solutions[index]?.calculation || ''"
+                  :disabled="pending"
+                  class="m5-math-preview__input"
+                  inputmode="text"
+                  aria-label="Viết phép tính"
+                  @input="updateSolution(index, 'calculation', $event)"
+                />
+              </div>
+            </div>
+          </template>
+          <template v-else-if="task.inputType === 'math'">
+            <div class="m5-math-preview m5-math-preview--full">
+              <div v-html="formatMath(responses[index] || '')" aria-hidden="true" />
+              <input
+                :value="responses[index]"
+                :disabled="pending"
+                class="m5-math-preview__input"
+                inputmode="text"
+                :aria-label="`Phép tính cho ${task.label}`"
+                @input="updateResponse(index, $event)"
+              />
+            </div>
+          </template>
+          <textarea
+            v-else
             :value="responses[index]"
-            inputmode="decimal"
-            autocomplete="off"
-            maxlength="80"
             :disabled="pending"
-            :aria-label="`Điền kết quả cho ${task.label}`"
-            placeholder="?"
+            class="m5-notebook-paper__native-text m5-notebook-paper__native-text--full"
+            rows="4"
+            placeholder="Em viết câu trả lời của mình ở đây..."
+            :aria-label="`Câu trả lời cho ${task.label}`"
             @input="updateResponse(index, $event)"
           />
-          <span v-if="task.suffix">{{ task.suffix }}</span>
-        </label>
-        <label v-else class="m5-retry-task__short">
-          <span class="m5-sr-only">Câu trả lời cho {{ task.label }}</span>
-          <input
-            :value="responses[index]"
-            autocomplete="off"
-            maxlength="500"
-            :disabled="pending"
-            placeholder="Viết phép tính hoặc câu trả lời của em..."
-            @input="updateResponse(index, $event)"
-          />
-        </label>
+        </div>
+        <div v-if="task.inputType !== 'explanation'" class="m5-math-input">
+          <div class="m5-math-input__tools" aria-label="Ký hiệu toán học">
+            <button
+              v-for="symbol in mathSymbols"
+              :key="symbol.value"
+              type="button"
+              :disabled="pending"
+              :aria-label="symbol.label"
+              @click="addSymbol(index, symbol.value)"
+            >{{ symbol.value }}</button>
+          </div>
+          <div class="m5-fraction" aria-label="Nhập phân số">
+            <span class="m5-fraction__label">Phân số</span>
+            <div class="m5-fraction__fields">
+              <input v-model="fractions[index].numerator" :disabled="pending" inputmode="numeric" maxlength="20" aria-label="Tử số" placeholder="Tử" />
+              <i aria-hidden="true" />
+              <input v-model="fractions[index].denominator" :disabled="pending" inputmode="numeric" maxlength="20" aria-label="Mẫu số" placeholder="Mẫu" />
+            </div>
+            <button type="button" :disabled="pending" @click="addFraction(index)">Chèn phân số</button>
+          </div>
+        </div>
         <small><b>Gợi ý:</b> {{ task.hint }}</small>
       </article>
     </div>

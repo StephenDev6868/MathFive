@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: cached, error: cachedError } = await admin
     .from('ai_reviews')
-    .select('status, summary, strengths, issues, next_step')
+    .select('status, summary, strengths, issues, next_step, retry_tasks')
     .eq('problem_id', problem.id)
     .eq('provider', parsed.data.provider)
     .maybeSingle()
@@ -33,7 +33,18 @@ export default defineEventHandler(async (event) => {
     math5Error(503, 'Tính năng chữa bài chưa được cập nhật dữ liệu. Vui lòng thử lại sau.')
   }
   if (cached) {
-    return { data: { problemId: problem.id, status: cached.status, summary: cached.summary, strengths: cached.strengths, issues: cached.issues, nextStep: cached.next_step }, requestId: parsed.data.requestId }
+    return {
+      data: {
+        problemId: problem.id,
+        status: cached.status,
+        summary: cached.summary,
+        strengths: cached.strengths,
+        issues: cached.issues,
+        nextStep: cached.next_step,
+        retryTasks: cached.retry_tasks || [],
+      },
+      requestId: parsed.data.requestId,
+    }
   }
 
   await reserveMath5Quota(student.id, 'solve')
@@ -53,6 +64,7 @@ export default defineEventHandler(async (event) => {
     strengths: generated.result.strengths,
     issues: generated.result.issues,
     next_step: generated.result.nextStep,
+    retry_tasks: generated.result.retryTasks,
     model_name: useRuntimeConfig().openaiSolveModel,
     input_tokens: generated.usage?.input_tokens,
     output_tokens: generated.usage?.output_tokens,

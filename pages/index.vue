@@ -50,7 +50,7 @@ const ocrReview = ref<HTMLElement | null>(null)
 const workReview = ref<WorkReviewResult | null>(null)
 const reviewProvider = ref<ReviewProvider>('openai')
 const inputOrigin = ref<'image' | 'text' | null>(null)
-const problemImageUrl = ref<string | null>(null)
+const problemImageUrls = ref<string[]>([])
 const attemptCount = ref(0)
 const historyItems = ref<ProblemHistoryItem[]>([])
 const historyLoading = ref(false)
@@ -88,22 +88,22 @@ const utilityCards = [
   { id: 'hint', title: 'Gợi ý nhanh', text: 'Các câu hỏi thường gặp', icon: Zap, className: 'is-orange' },
 ] as const
 
-function setProblemImage(image: File | null) {
-  if (problemImageUrl.value) URL.revokeObjectURL(problemImageUrl.value)
-  problemImageUrl.value = image ? URL.createObjectURL(image) : null
+function setProblemImages(images: File[]) {
+  problemImageUrls.value.forEach(URL.revokeObjectURL)
+  problemImageUrls.value = images.map(image => URL.createObjectURL(image))
 }
 
-function handleDraft(payload: Pick<StudentQuestion, 'question' | 'image'>) {
+function handleDraft(payload: Pick<StudentQuestion, 'question' | 'images'>) {
   // While preparing a new submission, let the learner see exactly what will be sent.
   // Once OCR has returned, confirmedText becomes the source of truth instead.
   if (problemId.value) return
-  inputOrigin.value = payload.image ? 'image' : payload.question.trim() ? 'text' : null
-  setProblemImage(payload.image)
+  inputOrigin.value = payload.images.length ? 'image' : payload.question.trim() ? 'text' : null
+  setProblemImages(payload.images)
   confirmedText.value = payload.question
 }
 
 onBeforeUnmount(() => {
-  if (problemImageUrl.value) URL.revokeObjectURL(problemImageUrl.value)
+  problemImageUrls.value.forEach(URL.revokeObjectURL)
 })
 
 onMounted(() => {
@@ -162,8 +162,8 @@ async function handleSubmit(payload: StudentQuestion) {
     const recognized = await submit(payload)
     problemId.value = recognized.problemId
     reviewProvider.value = payload.provider
-    inputOrigin.value = payload.image ? 'image' : 'text'
-    setProblemImage(payload.image)
+    inputOrigin.value = payload.images.length ? 'image' : 'text'
+    setProblemImages(payload.images)
     confirmedText.value = recognized.ocrText
     unclearSegments.value = recognized.unclearSegments
     // A readable OCR result can still contain a wrong digit. Always let the learner
@@ -303,7 +303,7 @@ function handleNavigation(id: string) {
           <BookSpread>
           <template #question>
             <p class="m5-book-subtitle">Chụp cả đề và phần em đã làm để AI tìm chỗ cần sửa</p>
-            <div class="m5-problem m5-problem--live" :class="{ 'is-ready': Boolean(displayProblemText || problemImageUrl) }">
+            <div class="m5-problem m5-problem--live" :class="{ 'is-ready': Boolean(displayProblemText || problemImageUrls.length) }">
               <div class="m5-problem__topline">
                 <span class="m5-problem__label">
                   {{ inputOrigin === 'image' ? 'Bài làm đọc từ ảnh' : inputOrigin === 'text' ? 'Bài làm em đã nhập' : 'Bài làm của em' }}
@@ -312,15 +312,17 @@ function handleNavigation(id: string) {
                   {{ inputOrigin === 'image' ? 'Kết quả OCR' : 'Nội dung gốc' }}
                 </span>
               </div>
-              <template v-if="displayProblemText || problemImageUrl">
+              <template v-if="displayProblemText || problemImageUrls.length">
                 <div v-if="displayProblemText" class="m5-problem__content" aria-label="Nội dung bài làm">
                   <p v-for="(line, index) in displayProblemLines" :key="`${index}-${line}`">{{ line }}</p>
                 </div>
                 <p v-else class="m5-problem__waiting-copy">Ảnh bài làm đã sẵn sàng. Bấm “Kiểm tra bài làm” để AI đọc nội dung.</p>
-                <figure v-if="problemImageUrl" class="m5-problem__image">
-                  <img :src="problemImageUrl" alt="Ảnh bài làm em đã tải lên" />
-                  <figcaption>Ảnh bài làm đã gửi</figcaption>
-                </figure>
+                <div v-if="problemImageUrls.length" class="m5-problem__images">
+                  <figure v-for="(imageUrl, index) in problemImageUrls" :key="imageUrl" class="m5-problem__image">
+                    <img :src="imageUrl" :alt="`Ảnh bài làm ${index + 1}`" />
+                    <figcaption>Ảnh {{ index + 1 }}</figcaption>
+                  </figure>
+                </div>
               </template>
               <div v-else class="m5-problem__placeholder">
                 <FileText :size="25" aria-hidden="true" />

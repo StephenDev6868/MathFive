@@ -8,7 +8,7 @@ export const CreateTextProblemSchema = z.object({
 })
 
 export const RecognizeProblemSchema = z.object({
-  imagePath: z.string().trim().min(1).max(500),
+  imagePaths: z.array(z.string().trim().min(1).max(500)).min(1).max(5),
   requestId: RequestIdSchema,
 })
 
@@ -47,15 +47,24 @@ export const ReviewIssueSchema = z.object({
   hint: z.string().min(1).max(500),
 })
 
+export const RetryTaskSchema = z.object({
+  title: z.string().min(1).max(100),
+  instruction: z.string().min(1).max(400),
+  hint: z.string().min(1).max(300),
+  responseType: z.enum(['math', 'explanation', 'solution']),
+})
+
 export const WorkReviewResultSchema = z.object({
   status: z.enum(['correct', 'has_errors', 'needs_review', 'no_attempt']),
   summary: z.string().min(1).max(500),
   strengths: z.array(z.string().min(1).max(300)).max(5),
   issues: z.array(ReviewIssueSchema).max(10),
   nextStep: z.string().min(1).max(500),
+  retryTasks: z.array(RetryTaskSchema).max(4),
 })
 
 export type OcrResult = z.infer<typeof OcrResultSchema>
 export type ReviewIssue = z.infer<typeof ReviewIssueSchema>
+export type RetryTask = z.infer<typeof RetryTaskSchema>
 export type WorkReviewResult = z.infer<typeof WorkReviewResultSchema>
 export type ReviewProvider = z.infer<typeof ReviewProviderSchema>

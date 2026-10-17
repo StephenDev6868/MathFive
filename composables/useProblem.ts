@@ -9,15 +9,27 @@ export function useProblem() {
   const requestId = () => crypto.randomUUID()
 
   async function submit(question: StudentQuestion): Promise<RecognizedProblem> {
-    if (question.image) {
+    if (question.images.length) {
       const { data: sessionData } = await supabase.auth.getSession()
       const userId = sessionData.session?.user.id
       if (!userId) throw new Error('Em cần đăng nhập trước khi tải ảnh.')
-      const extension = question.image.type === 'image/png' ? 'png' : question.image.type === 'image/webp' ? 'webp' : 'jpg'
-      const imagePath = `${userId}/${crypto.randomUUID()}.${extension}`
-      const { error: uploadError } = await supabase.storage.from('math-problems').upload(imagePath, question.image, { contentType: question.image.type, upsert: false })
-      if (uploadError) throw uploadError
-      return (await api.post<{ data: RecognizedProblem }>('/problems/recognize', { imagePath, requestId: requestId() })).data
+      const imagePaths = question.images.map((image, index) => {
+        const extension = image.type === 'image/png' ? 'png' : image.type === 'image/webp' ? 'webp' : 'jpg'
+        return `${userId}/${crypto.randomUUID()}-${index + 1}.${extension}`
+      })
+      try {
+        await Promise.all(question.images.map(async (image, index) => {
+          const { error } = await supabase.storage.from('math-problems').upload(imagePaths[index], image, {
+            contentType: image.type,
+            upsert: false,
+          })
+          if (error) throw error
+        }))
+        return (await api.post<{ data: RecognizedProblem }>('/problems/recognize', { imagePaths, requestId: requestId() })).data
+      } catch (error) {
+        await supabase.storage.from('math-problems').remove(imagePaths)
+        throw error
+      }
     }
     return (await api.post<{ data: RecognizedProblem }>('/problems/text', { text: question.question, requestId: requestId() })).data
   }

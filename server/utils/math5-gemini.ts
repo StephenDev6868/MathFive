@@ -25,8 +25,22 @@ const workReviewJsonSchema = {
       },
     },
     nextStep: { type: 'string' },
+    retryTasks: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          instruction: { type: 'string' },
+          hint: { type: 'string' },
+          responseType: { type: 'string', enum: ['math', 'explanation', 'solution'] },
+        },
+        required: ['title', 'instruction', 'hint', 'responseType'],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ['status', 'summary', 'strengths', 'issues', 'nextStep'],
+  required: ['status', 'summary', 'strengths', 'issues', 'nextStep', 'retryTasks'],
   additionalProperties: false,
 } as const
 

@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const [reviewsResult, attemptsResult] = await Promise.all([
     admin
       .from('ai_reviews')
-      .select('problem_id, provider, status, summary, strengths, issues, next_step, created_at')
+      .select('problem_id, provider, status, summary, strengths, issues, next_step, retry_tasks, created_at')
       .in('problem_id', problemIds)
       .order('created_at', { ascending: false }),
     admin
@@ -76,6 +76,7 @@ export default defineEventHandler(async (event) => {
         strengths: review.strengths,
         issues: review.issues,
         nextStep: review.next_step,
+        retryTasks: review.retry_tasks || [],
       } : null,
       latestAttempt: latestAttempt ? {
         submittedAnswer: latestAttempt.submitted_answer,

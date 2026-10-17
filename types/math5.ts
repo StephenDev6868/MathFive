@@ -2,7 +2,7 @@ export type ReviewProvider = 'openai' | 'gemini'
 
 export type StudentQuestion = {
   question: string
-  image: File | null
+  images: File[]
   source: 'camera' | 'upload' | null
   provider: ReviewProvider
 }
@@ -17,12 +17,21 @@ export type ReviewIssue = {
   hint: string
 }
 
+export type RetryTask = {
+  title: string
+  instruction: string
+  hint: string
+  /** Keeps reviews created before this upgrade compatible. */
+  responseType?: 'math' | 'explanation' | 'solution'
+}
+
 export type WorkReview = {
   status: ReviewStatus
   summary: string
   strengths: string[]
   issues: ReviewIssue[]
   nextStep: string
+  retryTasks?: RetryTask[]
 }
 
 export type AttemptReview = WorkReview & {

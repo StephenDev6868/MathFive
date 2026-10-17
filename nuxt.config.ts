@@ -67,7 +67,7 @@ export default defineNuxtConfig({
     geminiApiKey: process.env.NUXT_GEMINI_API_KEY,
     geminiSolveModel: process.env.NUXT_GEMINI_SOLVE_MODEL,
     supabaseSecretKey: process.env.NUXT_SUPABASE_SECRET_KEY,
-    aiDailyOcrLimit: Number(process.env.NUXT_AI_DAILY_OCR_LIMIT || 20),
+    aiDailyOcrLimit: Number(process.env.NUXT_AI_DAILY_OCR_LIMIT || 40),
     aiDailySolveLimit: Number(process.env.NUXT_AI_DAILY_SOLVE_LIMIT || 15),
     
     // Public keys available on both client & server

@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const { data: previousReview, error: reviewError } = await admin
     .from('ai_reviews')
-    .select('status, summary, strengths, issues, next_step')
+    .select('status, summary, strengths, issues, next_step, retry_tasks')
     .eq('problem_id', problem.id)
     .eq('provider', parsed.data.provider)
     .maybeSingle()

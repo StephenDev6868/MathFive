@@ -4,27 +4,27 @@ import { Camera, ImageUp, Send, X, FileImage } from 'lucide-vue-next'
 import type { ReviewProvider, StudentQuestion } from '~/types/math5'
 const emit = defineEmits<{
   submit: [payload: StudentQuestion]
-  draft: [payload: Pick<StudentQuestion, 'question' | 'image'>]
+  draft: [payload: Pick<StudentQuestion, 'question' | 'images'>]
 }>()
 withDefaults(defineProps<{ pending?: boolean }>(), { pending: false })
 const cameraInput = ref<HTMLInputElement | null>(null)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const question = ref('')
 const provider = ref<ReviewProvider>('openai')
-const image = ref<File | null>(null)
+const images = ref<Array<{ file: File; previewUrl: string }>>([])
 const imageSource = ref<StudentQuestion['source']>(null)
-const previewUrl = ref<string | null>(null)
 const error = ref('')
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_TOTAL_IMAGE_BYTES = 15 * 1024 * 1024
+const MAX_IMAGES = 5
 const ACCEPTED_TYPES = new Set(['image/jpeg','image/png','image/webp'])
 
 function emitDraft() {
-  emit('draft', { question: question.value, image: image.value })
+  emit('draft', { question: question.value, images: images.value.map(image => image.file) })
 }
-function clearPreview(notify = true) {
-  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
-  previewUrl.value = null
-  image.value = null
+function clearImages(notify = true) {
+  images.value.forEach(image => URL.revokeObjectURL(image.previewUrl))
+  images.value = []
   imageSource.value = null
   if (cameraInput.value) cameraInput.value.value = ''
   if (uploadInput.value) uploadInput.value.value = ''
@@ -32,26 +32,49 @@ function clearPreview(notify = true) {
 }
 function onChoose(event: Event, source: 'camera' | 'upload') {
   error.value = ''
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
-  if (!ACCEPTED_TYPES.has(file.type)) { error.value = 'Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.'; return }
-  if (file.size > MAX_IMAGE_BYTES) { error.value = 'Ảnh tối đa 5 MB, hãy thử ảnh khác nhé.'; return }
-  clearPreview(false)
-  image.value = file
+  const input = event.target as HTMLInputElement
+  const selected = Array.from(input.files || [])
+  input.value = ''
+  if (!selected.length) return
+  const remaining = MAX_IMAGES - images.value.length
+  if (remaining <= 0) { error.value = `Em chỉ có thể chọn tối đa ${MAX_IMAGES} ảnh.`; return }
+
+  const accepted = selected.slice(0, remaining).filter(file => {
+    if (!ACCEPTED_TYPES.has(file.type)) { error.value = 'Chỉ hỗ trợ ảnh JPG, PNG hoặc WebP.'; return false }
+    if (file.size > MAX_IMAGE_BYTES) { error.value = 'Mỗi ảnh tối đa 5 MB.'; return false }
+    return true
+  })
+  const availableBytes = MAX_TOTAL_IMAGE_BYTES - images.value.reduce((total, image) => total + image.file.size, 0)
+  const imagesToAdd: File[] = []
+  let addedBytes = 0
+  for (const file of accepted) {
+    if (addedBytes + file.size > availableBytes) { error.value = 'Tổng dung lượng ảnh tối đa là 15 MB.'; break }
+    imagesToAdd.push(file)
+    addedBytes += file.size
+  }
+  if (selected.length > remaining) error.value = `Em chỉ có thể chọn tối đa ${MAX_IMAGES} ảnh.`
+  if (!imagesToAdd.length) return
+
+  images.value.push(...imagesToAdd.map(file => ({ file, previewUrl: URL.createObjectURL(file) })))
   imageSource.value = source
-  previewUrl.value = URL.createObjectURL(file)
+  emitDraft()
+}
+function removeImage(index: number) {
+  const [image] = images.value.splice(index, 1)
+  if (image) URL.revokeObjectURL(image.previewUrl)
+  if (!images.value.length) imageSource.value = null
   emitDraft()
 }
 function submit() {
   error.value = ''
-  if (!question.value.trim() && !image.value) {
+  if (!question.value.trim() && !images.value.length) {
     error.value = 'Em hãy nhập đề kèm bài làm hoặc chọn ảnh vở bài tập nhé!'
     return
   }
-  emit('submit', { question: question.value.trim(), image: image.value, source: imageSource.value, provider: provider.value })
+  emit('submit', { question: question.value.trim(), images: images.value.map(image => image.file), source: imageSource.value, provider: provider.value })
 }
 watch(question, emitDraft)
-onBeforeUnmount(() => clearPreview(false))
+onBeforeUnmount(() => clearImages(false))
 </script>
 
 <template>
@@ -68,13 +91,18 @@ onBeforeUnmount(() => clearPreview(false))
       </button>
     </div>
     <input ref="cameraInput" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="m5-sr-only" aria-label="Chụp ảnh bài làm" @change="onChoose($event, 'camera')" />
-    <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" class="m5-sr-only" aria-label="Tải ảnh bài làm" @change="onChoose($event, 'upload')" />
+    <input ref="uploadInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="m5-sr-only" aria-label="Tải ảnh bài làm" @change="onChoose($event, 'upload')" />
 
-    <div v-if="image && previewUrl" class="m5-image-preview">
-      <FileImage :size="18" aria-hidden="true" />
-      <img :src="previewUrl" :alt="'Ảnh bài tập: ' + image.name" />
-      <span>{{ image.name }}</span>
-      <button type="button" aria-label="Bỏ ảnh" @click="clearPreview()"><X :size="18" /></button>
+    <div v-if="images.length" class="m5-image-preview" :aria-label="`${images.length} ảnh bài tập đã chọn`">
+      <div class="m5-image-preview__heading"><FileImage :size="18" aria-hidden="true" /><span>{{ images.length }}/{{ MAX_IMAGES }} ảnh đã chọn</span></div>
+      <div class="m5-image-preview__list">
+        <figure v-for="(image, index) in images" :key="image.previewUrl" class="m5-image-preview__item">
+          <img :src="image.previewUrl" :alt="`Ảnh bài tập ${index + 1}: ${image.file.name}`" />
+          <figcaption>Ảnh {{ index + 1 }}</figcaption>
+          <button type="button" :aria-label="`Bỏ ảnh ${index + 1}`" @click="removeImage(index)"><X :size="16" /></button>
+        </figure>
+      </div>
+      <button v-if="images.length > 1" type="button" class="m5-image-preview__clear" @click="clearImages()">Bỏ tất cả</button>
     </div>
 
     <!-- Row 2: independent full-width chat entry -->
