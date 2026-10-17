@@ -65,6 +65,24 @@ function model(kind: 'vision' | 'solve') {
   return value
 }
 
+/** Only billing/quota exhaustion should fail over to another provider, never a transient rate limit. */
+export function isOpenAIQuotaOrBillingError(error: unknown) {
+  if (!error || typeof error !== 'object') return false
+  const candidate = error as { status?: unknown; code?: unknown; message?: unknown }
+  if (Number(candidate.status) !== 429) return false
+
+  const code = String(candidate.code || '').toLowerCase()
+  if ([
+    'insufficient_quota',
+    'credit_balance_exhausted',
+    'organization_spend_limit_exceeded',
+    'project_spend_limit_exceeded',
+    'organization_usage_limit_exceeded',
+  ].includes(code)) return true
+
+  return /insufficient quota|credit balance|billing|spend limit|usage limit/i.test(String(candidate.message || ''))
+}
+
 export async function recognizeMathProblem(imageDataUrls: string[]) {
   const response = await client().responses.parse({
     model: model('vision'),

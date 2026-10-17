@@ -38,6 +38,8 @@ const emit = defineEmits<{
 const responses = ref<string[]>([])
 const fractions = ref<FractionPart[]>([])
 const solutions = ref<SolutionPart[]>([])
+const mathEditors = ref<Record<number, HTMLElement>>({})
+const mathRanges = ref<Record<number, Range>>({})
 const localError = ref('')
 
 const tasks = computed<RetryTask[]>(() => {
@@ -78,7 +80,9 @@ watch(taskVersion, () => {
   responses.value = tasks.value.map(() => '')
   fractions.value = tasks.value.map(() => ({ numerator: '', denominator: '' }))
   solutions.value = tasks.value.map(() => ({ calculation: '', explanation: '' }))
+  mathRanges.value = {}
   localError.value = ''
+  nextTick(() => Object.values(mathEditors.value).forEach(editor => editor.replaceChildren()))
 }, { immediate: true })
 
 function updateResponse(index: number, event: Event) {
@@ -87,14 +91,7 @@ function updateResponse(index: number, event: Event) {
 }
 
 function addSymbol(index: number, symbol: string) {
-  if (tasks.value[index]?.inputType === 'solution') {
-    const solution = solutions.value[index]!
-    solution.calculation = `${solution.calculation}${symbol}`
-    syncSolution(index)
-    return
-  }
-  responses.value[index] = `${responses.value[index] || ''}${symbol}`
-  localError.value = ''
+  insertMathText(index, symbol)
 }
 
 function updateSolution(index: number, field: keyof SolutionPart, event: Event) {
@@ -114,19 +111,95 @@ function addFraction(index: number) {
     localError.value = 'Em điền cả tử số và mẫu số rồi chèn phân số nhé.'
     return
   }
-  addSymbol(index, `(${fraction.numerator}/${fraction.denominator})`)
+  const token = document.createElement('span')
+  token.className = 'm5-inline-fraction'
+  token.contentEditable = 'false'
+  token.dataset.mathValue = `(${fraction.numerator}/${fraction.denominator})`
+  const numerator = document.createElement('sup')
+  numerator.textContent = fraction.numerator
+  const divider = document.createElement('i')
+  const denominator = document.createElement('sub')
+  denominator.textContent = fraction.denominator
+  token.append(numerator, divider, denominator)
+  insertMathNode(index, token)
   fractions.value[index] = { numerator: '', denominator: '' }
 }
 
-function formatMath(value: string) {
-  const escaped = value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+function setMathEditor(index: number, element: unknown) {
+  if (element instanceof HTMLElement) mathEditors.value[index] = element
+  else delete mathEditors.value[index]
+}
 
-  return escaped.replace(/\(?(-?\d+(?:[,.]\d+)?)\s*\/\s*(-?\d+(?:[,.]\d+)?)\)?/g, (_match, numerator, denominator) => (
-    `<span class="m5-math-fraction"><sup>${numerator}</sup><i></i><sub>${denominator}</sub></span>`
-  )) || '<span class="m5-math-preview__placeholder">Ví dụ: 2/3 sẽ hiện thành phân số</span>'
+function rememberMathCaret(index: number) {
+  const editor = mathEditors.value[index]
+  const selection = window.getSelection()
+  if (!editor || !selection?.rangeCount || !editor.contains(selection.anchorNode)) return
+  mathRanges.value[index] = selection.getRangeAt(0).cloneRange()
+}
+
+function rangeForEditor(index: number) {
+  const editor = mathEditors.value[index]
+  if (!editor) return
+  const range = mathRanges.value[index]?.cloneRange() || document.createRange()
+  if (!mathRanges.value[index]) {
+    range.selectNodeContents(editor)
+    range.collapse(false)
+  }
+  return range
+}
+
+function restoreMathCaret(index: number, range: Range) {
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  selection?.addRange(range)
+  mathRanges.value[index] = range.cloneRange()
+}
+
+function readMathEditor(editor: HTMLElement) {
+  const readNode = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent || ''
+    if (!(node instanceof HTMLElement)) return ''
+    if (node.dataset.mathValue) return node.dataset.mathValue
+    if (node.tagName === 'BR') return '\n'
+    const content = Array.from(node.childNodes).map(readNode).join('')
+    return ['DIV', 'P'].includes(node.tagName) ? `${content}\n` : content
+  }
+  return Array.from(editor.childNodes).map(readNode).join('').replace(/\n{3,}/g, '\n\n').trimEnd()
+}
+
+function syncMathEditor(index: number) {
+  const editor = mathEditors.value[index]
+  if (!editor) return
+  const value = readMathEditor(editor)
+  if (tasks.value[index]?.inputType === 'solution') {
+    solutions.value[index]!.calculation = value
+    syncSolution(index)
+  } else {
+    responses.value[index] = value
+    localError.value = ''
+  }
+}
+
+function insertMathNode(index: number, node: Node) {
+  const editor = mathEditors.value[index]
+  const range = rangeForEditor(index)
+  if (!editor || !range) return
+  editor.focus()
+  range.deleteContents()
+  range.insertNode(node)
+  range.setStartAfter(node)
+  range.collapse(true)
+  restoreMathCaret(index, range)
+  syncMathEditor(index)
+}
+
+function insertMathText(index: number, text: string) {
+  insertMathNode(index, document.createTextNode(text))
+}
+
+function updateMathEditor(index: number) {
+  rememberMathCaret(index)
+  syncMathEditor(index)
 }
 
 function submitAttempt() {
@@ -180,31 +253,33 @@ function submitAttempt() {
             </div>
             <div class="m5-notebook-paper__line m5-notebook-paper__line--calculation">
               <strong>Phép tính:</strong>
-              <div class="m5-math-preview">
-                <div v-html="formatMath(solutions[index]?.calculation || '')" aria-hidden="true" />
-                <input
-                  :value="solutions[index]?.calculation || ''"
-                  :disabled="pending"
-                  class="m5-math-preview__input"
-                  inputmode="text"
-                  aria-label="Viết phép tính"
-                  @input="updateSolution(index, 'calculation', $event)"
-                />
-              </div>
+              <div
+                :ref="element => setMathEditor(index, element)"
+                class="m5-math-editor"
+                :contenteditable="!pending"
+                role="textbox"
+                aria-label="Viết phép tính"
+                data-placeholder="Gõ phép tính hoặc dùng các nút bên dưới..."
+                @focus="rememberMathCaret(index)"
+                @keyup="rememberMathCaret(index)"
+                @mouseup="rememberMathCaret(index)"
+                @input="updateMathEditor(index)"
+              />
             </div>
           </template>
           <template v-else-if="task.inputType === 'math'">
-            <div class="m5-math-preview m5-math-preview--full">
-              <div v-html="formatMath(responses[index] || '')" aria-hidden="true" />
-              <input
-                :value="responses[index]"
-                :disabled="pending"
-                class="m5-math-preview__input"
-                inputmode="text"
-                :aria-label="`Phép tính cho ${task.label}`"
-                @input="updateResponse(index, $event)"
-              />
-            </div>
+            <div
+              :ref="element => setMathEditor(index, element)"
+              class="m5-math-editor m5-math-editor--full"
+              :contenteditable="!pending"
+              role="textbox"
+              :aria-label="`Phép tính cho ${task.label}`"
+              data-placeholder="Gõ phép tính hoặc dùng các nút bên dưới..."
+              @focus="rememberMathCaret(index)"
+              @keyup="rememberMathCaret(index)"
+              @mouseup="rememberMathCaret(index)"
+              @input="updateMathEditor(index)"
+            />
           </template>
           <textarea
             v-else

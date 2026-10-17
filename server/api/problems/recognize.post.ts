@@ -1,6 +1,7 @@
 import { RecognizeProblemSchema } from '~/shared/schemas/math5'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
-import { recognizeMathProblem } from '~/server/utils/math5-openai'
+import { isOpenAIQuotaOrBillingError, recognizeMathProblem } from '~/server/utils/math5-openai'
+import { isGeminiVisionConfigured, recognizeMathProblemWithGemini } from '~/server/utils/math5-gemini'
 import { reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
 import { requireMath5Student } from '~/server/utils/math5-user'
@@ -36,13 +37,26 @@ export default defineEventHandler(async (event) => {
 
   await reserveMath5Quota(student.id, 'ocr')
   let recognized
+  const imageData = await Promise.all(files.map(async file => ({
+    base64: Buffer.from(await file.arrayBuffer()).toString('base64'),
+    mimeType: file.type,
+  })))
   try {
-    const imageDataUrls = await Promise.all(files.map(async file =>
-      `data:${file.type};base64,${Buffer.from(await file.arrayBuffer()).toString('base64')}`
-    ))
+    const imageDataUrls = imageData.map(image => `data:${image.mimeType};base64,${image.base64}`)
     recognized = await recognizeMathProblem(imageDataUrls)
   } catch (error) {
-    return asPublicModelError(error)
+    if (isOpenAIQuotaOrBillingError(error) && isGeminiVisionConfigured()) {
+      console.warn('[math5] OpenAI OCR quota or billing limit reached; falling back to Gemini', {
+        code: (error as { code?: unknown }).code,
+      })
+      try {
+        recognized = await recognizeMathProblemWithGemini(imageData)
+      } catch (geminiError) {
+        return asPublicModelError(geminiError, 'gemini')
+      }
+    } else {
+      return asPublicModelError(error)
+    }
   }
 
   const { data, error } = await admin
