@@ -1,4 +1,5 @@
 import { RetryProblemSchema } from '~/shared/schemas/math5'
+import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
 import { reviewRevisedMathWork } from '~/server/utils/math5-openai'
 import { reviewRevisedMathWorkWithGemini } from '~/server/utils/math5-gemini'
@@ -79,6 +80,7 @@ export default defineEventHandler(async (event) => {
     console.error('[math5] student attempt insert failed', { code: saveError?.code, message: saveError?.message })
     math5Error(503, 'Đã chấm bài làm lại nhưng chưa thể lưu an toàn. Em hãy thử lại nhé.')
   }
+  await recordMath5Activity(student.id, 'attempt_submitted', { correct: verdict === 'correct' })
 
   return {
     data: { attemptId: attempt.id, ...generated.result },

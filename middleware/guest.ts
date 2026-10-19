@@ -6,6 +6,6 @@ export default defineNuxtRouteMiddleware(async () => {
   }
 
   if (authStore.isAuthenticated) {
-    return navigateTo('/')
+    return navigateTo(authStore.user?.role === 'teacher' ? '/teacher' : '/')
   }
 })

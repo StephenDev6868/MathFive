@@ -12,7 +12,6 @@ import {
   History,
   Home,
   Lightbulb,
-  LogOut,
   MessageCircle,
   Search,
   UserRound,
@@ -27,14 +26,14 @@ import RetryAttemptForm from '~/components/math5/RetryAttemptForm.vue'
 import WorkReview from '~/components/math5/WorkReview.vue'
 import type { ProblemHistoryItem, ReviewProvider, StudentQuestion, WorkReview as WorkReviewResult } from '~/types/math5'
 
-definePageMeta({ layout: false, middleware: 'auth' })
+definePageMeta({ layout: false, middleware: ['auth', 'student'] })
 
 useSeoMeta({
   title: 'AI kiểm tra bài làm Toán lớp 5',
   description: 'Chụp bài làm Toán lớp 5 để phát hiện lỗi và nhận gợi ý tự sửa.',
 })
 
-type Overlay = 'notifications' | 'history' | 'tips' | 'saved' | 'hint' | 'progress' | 'profile' | null
+type Overlay = 'notifications' | 'history' | 'tips' | 'saved' | 'hint' | 'progress' | null
 
 const authStore = useAuthStore()
 const overlay = ref<Overlay>(null)
@@ -233,6 +232,10 @@ function openOverlay(value: Exclude<Overlay, null>) {
   overlay.value = value
 }
 
+function openProfile() {
+  void navigateTo('/profile')
+}
+
 function handleNavigation(id: string) {
   if (id === 'home' || id === 'questions') {
     document.querySelector('.m5-book-stage')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -262,7 +265,7 @@ function handleNavigation(id: string) {
       <div class="m5-header__right">
         <button type="button" aria-label="Tìm lịch sử chữa bài" @click="openHistory()"><Search :size="20" /></button>
         <button type="button" aria-label="Thông báo" @click="openOverlay('notifications')"><Bell :size="20" /><i /></button>
-        <button class="m5-profile-button" type="button" @click="openOverlay('profile')">
+        <button class="m5-profile-button" type="button" @click="openProfile">
           <span class="m5-avatar">{{ initials }}</span>
           <span><strong>Lớp 5</strong><small>{{ displayName }}</small></span>
         </button>
@@ -362,20 +365,14 @@ function handleNavigation(id: string) {
       <button type="button" @click="handleNavigation('questions')"><MessageCircle /><span>Chữa bài</span></button>
       <button type="button" @click="openOverlay('history')"><Bookmark /><span>Lịch sử</span></button>
       <button type="button" @click="openOverlay('tips')"><Bell /><span>Mẹo hay</span></button>
-      <button type="button" @click="openOverlay('profile')"><UserRound /><span>Hồ sơ</span></button>
+      <button type="button" @click="openProfile"><UserRound /><span>Hồ sơ</span></button>
     </nav>
 
     <Teleport to="body">
       <div v-if="overlay" class="m5-overlay" role="presentation" @click.self="overlay = null">
         <section class="m5-dialog" :class="{ 'm5-dialog--history': overlay === 'history', 'm5-dialog--tips': overlay === 'tips' }" role="dialog" aria-modal="true">
           <button class="m5-dialog__close" type="button" aria-label="Đóng" @click="overlay = null"><X :size="22" /></button>
-          <template v-if="overlay === 'profile'">
-            <span class="m5-avatar m5-avatar--large">{{ initials }}</span>
-            <h2>{{ displayName }}</h2>
-            <p class="m5-dialog__email">{{ authStore.user?.email }}</p>
-            <button class="m5-dialog__logout" type="button" @click="authStore.logout"><LogOut :size="18" /> Đăng xuất</button>
-          </template>
-          <template v-else-if="overlay === 'history'">
+          <template v-if="overlay === 'history'">
             <span class="m5-dialog__icon"><History /></span><h2>Lịch sử chữa bài</h2>
             <label class="m5-dialog__field m5-history-search">
               <span>Tìm trong bài đã gửi</span>

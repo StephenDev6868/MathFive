@@ -1,4 +1,5 @@
 import { RecognizeProblemSchema } from '~/shared/schemas/math5'
+import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
 import { isOpenAIQuotaOrBillingError, recognizeMathProblem } from '~/server/utils/math5-openai'
 import { isGeminiVisionConfigured, recognizeMathProblemWithGemini } from '~/server/utils/math5-gemini'
@@ -71,6 +72,7 @@ export default defineEventHandler(async (event) => {
     .select('id, status')
     .single()
   if (error || !data) math5Error(503, 'Đã đọc ảnh nhưng chưa thể lưu đề bài.')
+  await recordMath5Activity(student.id, 'problem_created', { inputType: 'image' })
 
   return {
     data: {

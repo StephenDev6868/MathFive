@@ -33,6 +33,26 @@ export const ProblemHistoryQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 })
 
+export const TeacherDashboardQuerySchema = z.object({
+  classId: z.string().uuid().optional(),
+  days: z.coerce.number().int().refine(value => [7, 14, 30].includes(value)).default(7),
+})
+
+const StudentUsernameSchema = z.string().trim().toLowerCase().regex(/^[a-z][a-z0-9]{2,39}$/, 'Tên đăng nhập không hợp lệ.')
+const StudentDisplayNameSchema = z.string().trim().min(2).max(80)
+
+export const CreateTeacherStudentSchema = z.object({
+  classroomId: z.string().uuid(),
+  displayName: StudentDisplayNameSchema,
+  username: StudentUsernameSchema,
+})
+
+export const UpdateTeacherStudentSchema = z.object({
+  classroomId: z.string().uuid().optional(),
+  displayName: StudentDisplayNameSchema.optional(),
+  username: StudentUsernameSchema.optional(),
+}).refine(value => value.classroomId || value.displayName || value.username, 'Chưa có thông tin cần cập nhật.')
+
 export const OcrResultSchema = z.object({
   recognizedText: z.string().min(1).max(5000),
   unclearSegments: z.array(z.string().max(100)).max(20),

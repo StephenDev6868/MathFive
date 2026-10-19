@@ -1,4 +1,5 @@
 import { CreateTextProblemSchema } from '~/shared/schemas/math5'
+import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { math5Error } from '~/server/utils/math5-errors'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
 import { requireMath5Student } from '~/server/utils/math5-user'
@@ -21,5 +22,6 @@ export default defineEventHandler(async (event) => {
     .single()
 
   if (error || !data) math5Error(503, 'Không thể lưu đề bài lúc này.')
+  await recordMath5Activity(student.id, 'problem_created', { inputType: 'text' })
   return { data: { problemId: data.id, ocrText: data.ocr_text, unclearSegments: [], status: data.status }, requestId: parsed.data.requestId }
 })

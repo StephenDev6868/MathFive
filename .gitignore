@@ -25,3 +25,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# One-time school roster credentials and teacher mappings (contains child account passwords).
+private-delivery/

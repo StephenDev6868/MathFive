@@ -1,6 +1,7 @@
 export interface User {
   id: string
   name: string
+  username: string
   email: string
   role: 'student' | 'teacher'
   avatar: string
@@ -16,7 +17,7 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  email: string
+  username: string
   password: string
   rememberMe?: boolean
 }

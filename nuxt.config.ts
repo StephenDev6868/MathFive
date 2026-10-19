@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   telemetry: false,
 
-  css: ['~/assets/css/math5-theme.css'],
+  css: ['~/assets/css/math5-theme.css', '~/assets/css/math5-dashboard.css'],
 
   modules: [
     '@nuxt/ui',

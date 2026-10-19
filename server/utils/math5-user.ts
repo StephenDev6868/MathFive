@@ -3,8 +3,10 @@ import { math5Error } from './math5-errors'
 import { useMath5SupabaseAdmin, useMath5SupabaseAuth } from './math5-supabase'
 
 export type Math5Student = User & { role: 'student' }
+export type Math5Teacher = User & { role: 'teacher' }
+export type Math5User = User & { role: 'student' | 'teacher' }
 
-export async function requireMath5Student(event: Parameters<typeof getHeader>[0]): Promise<Math5Student> {
+export async function requireMath5User(event: Parameters<typeof getHeader>[0]): Promise<Math5User> {
   const authorization = getHeader(event, 'authorization')
   const token = authorization?.startsWith('Bearer ') ? authorization.slice(7) : undefined
   if (!token) math5Error(401, 'Em cần đăng nhập để sử dụng trợ lý AI.')
@@ -19,6 +21,20 @@ export async function requireMath5Student(event: Parameters<typeof getHeader>[0]
     .maybeSingle()
 
   if (profileError) math5Error(503, 'Không thể kiểm tra quyền tài khoản lúc này.')
-  if (!profile || profile.role !== 'student') math5Error(403, 'Tính năng này chỉ dành cho học sinh.')
-  return Object.assign(data.user, { role: 'student' as const })
+  if (!profile || (profile.role !== 'student' && profile.role !== 'teacher')) {
+    math5Error(403, 'Tài khoản chưa được phân quyền hợp lệ.')
+  }
+  return Object.assign(data.user, { role: profile.role as 'student' | 'teacher' })
+}
+
+export async function requireMath5Student(event: Parameters<typeof getHeader>[0]): Promise<Math5Student> {
+  const user = await requireMath5User(event)
+  if (user.role !== 'student') math5Error(403, 'Tính năng này chỉ dành cho học sinh.')
+  return user as Math5Student
+}
+
+export async function requireMath5Teacher(event: Parameters<typeof getHeader>[0]): Promise<Math5Teacher> {
+  const user = await requireMath5User(event)
+  if (user.role !== 'teacher') math5Error(403, 'Tính năng này chỉ dành cho giáo viên.')
+  return user as Math5Teacher
 }

@@ -15,10 +15,10 @@
 
     <form class="m5-login-form" @submit.prevent="handleLogin">
       <div class="m5-login-field">
-        <label class="m5-login-field__label" for="login-email">Email</label>
+        <label class="m5-login-field__label" for="login-username">Tên đăng nhập</label>
         <div class="m5-login-field__control">
-          <Mail :size="20" aria-hidden="true" />
-          <input id="login-email" v-model.trim="form.email" type="email" inputmode="email" autocomplete="username" placeholder="Ví dụ: an@mathfive.com" required />
+          <AtSign :size="20" aria-hidden="true" />
+          <input id="login-username" v-model.trim="form.username" type="text" inputmode="text" autocapitalize="none" autocomplete="username" placeholder="Ví dụ: congnv" required />
         </div>
       </div>
 
@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, BookOpen, Check, ChevronRight, Eye, EyeOff, LockKeyhole, Mail, Rocket, WandSparkles } from 'lucide-vue-next'
+import { ArrowRight, AtSign, BookOpen, Check, ChevronRight, Eye, EyeOff, LockKeyhole, Rocket, WandSparkles } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'auth', middleware: 'guest' })
 useSeoMeta({ title: 'Đăng nhập', description: 'Đăng nhập để học Toán lớp 5 cùng MathFive.' })
@@ -65,24 +65,24 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 const showPassword = ref(false)
-const form = reactive({ email: '', password: '', rememberMe: true })
+const form = reactive({ username: '', password: '', rememberMe: true })
 
 function fillDemoAccount() {
-  form.email = 'demo@mathfive.com'
+  form.username = 'demo'
   form.password = '123456'
   toast.add({ title: 'Đã điền thông tin', description: 'Bấm đăng nhập để tiếp tục.', color: 'emerald' })
 }
 
 async function handleLogin() {
-  if (!form.email || !form.password) {
-    toast.add({ title: 'Mình còn thiếu thông tin', description: 'Em nhập đủ email và mật khẩu nhé.', color: 'red' })
+  if (!form.username || !form.password) {
+    toast.add({ title: 'Mình còn thiếu thông tin', description: 'Em nhập đủ tên đăng nhập và mật khẩu nhé.', color: 'red' })
     return
   }
   loading.value = true
   try {
-    await authStore.login({ email: form.email, password: form.password, rememberMe: form.rememberMe })
+    const user = await authStore.login({ username: form.username, password: form.password, rememberMe: form.rememberMe })
     toast.add({ title: 'Đăng nhập thành công!', description: `Chào mừng trở lại, ${authStore.user?.name}!`, color: 'emerald' })
-    const redirectUrl = (route.query.redirect as string) || '/'
+    const redirectUrl = (route.query.redirect as string) || (user?.role === 'teacher' ? '/teacher' : '/')
     await navigateTo(redirectUrl)
   } catch (err: any) {
     toast.add({ title: 'Đăng nhập chưa thành công', description: err?.data?.statusMessage || err?.message || 'Kiểm tra lại email và mật khẩu nhé.', color: 'red' })
