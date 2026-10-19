@@ -5,3 +5,237 @@
 @media(max-width:767px){.m5-roster-heading{align-items:flex-start;flex-direction:column}.m5-roster-toolbar{align-items:stretch;flex-direction:column}.m5-roster-toolbar label{min-width:0}.m5-student-form{grid-template-columns:1fr}.m5-student-form>strong,.m5-form-actions{grid-column:auto}.m5-credential-notice{align-items:flex-start}.m5-credential-notice p{line-height:1.6}.m5-roster-table{min-width:570px}}
 @media(max-width:390px){.m5-profile-grid,.m5-kpi-grid{grid-template-columns:1fr}.m5-filter-row{grid-template-columns:1fr}.m5-profile-identity dl>div{grid-template-columns:1fr;gap:2px}.m5-profile-identity dd{padding-left:22px}.m5-summary-card,.m5-kpi-card{flex-direction:row;align-items:center}}
 @media(prefers-reduced-motion:reduce){.m5-loader{animation-duration:1.6s}}
+
+/* Roster Inline Edit & Pagination */
+.m5-roster-table tr.is-editing td {
+  background: #fff8f5;
+  border-bottom-color: #ffdacc;
+}
+.m5-roster-actions button.is-active {
+  border-color: #f18e7d;
+  background: #ffebe6;
+  color: #df5542;
+}
+.m5-roster-table td.m5-roster-inline-edit-cell {
+  display: table-cell !important;
+  padding: 0 !important;
+  background: #fff8f5;
+  border-bottom: 2px solid #f5cfc1;
+}
+.m5-roster-inline-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #fffaf7 0%, #fff7f2 100%);
+  border-left: 4px solid #ef6654;
+}
+.m5-inline-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.m5-inline-edit-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #8d4d42;
+  font-size: 11px;
+  font-weight: 800;
+}
+.m5-inline-edit-title svg {
+  width: 14px;
+  height: 14px;
+  color: #ef6654;
+  flex-shrink: 0;
+}
+.m5-inline-edit-title strong {
+  color: #34415d;
+  font-weight: 900;
+}
+.m5-inline-edit-title code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: #f5e8e2;
+  color: #78453b;
+  font: 800 10px var(--m5-font);
+}
+.m5-inline-edit-close {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #7a8392;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.m5-inline-edit-close:hover {
+  border-color: #f5c9c1;
+  background: #fff0ed;
+  color: #df5542;
+}
+.m5-inline-edit-close svg {
+  width: 15px;
+  height: 15px;
+}
+.m5-inline-edit-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr .8fr auto;
+  align-items: end;
+  gap: 10px;
+}
+.m5-inline-edit-grid label {
+  display: grid;
+  gap: 5px;
+}
+.m5-inline-edit-grid label span {
+  color: #6e7789;
+  font-size: 9px;
+  font-weight: 800;
+}
+.m5-inline-edit-grid input,
+.m5-inline-edit-grid select {
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #dce3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #34415d;
+  font: 800 11px var(--m5-font);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.m5-inline-edit-grid input:focus,
+.m5-inline-edit-grid select:focus {
+  border-color: #f18e7d;
+  box-shadow: 0 0 0 3px rgba(241,142,125,.14);
+}
+.m5-roster-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e1e7ee;
+  border-radius: 14px;
+  background: #fff;
+}
+.m5-pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #627088;
+  font-size: 11px;
+  font-weight: 700;
+}
+.m5-pagination-info strong {
+  color: #33415d;
+  font-weight: 900;
+}
+.m5-pagination-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7a8392;
+  font-size: 10px;
+  font-weight: 800;
+}
+.m5-pagination-size select {
+  height: 32px;
+  padding: 0 24px 0 9px;
+  border: 1px solid #dce3eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #34415d;
+  font: 800 11px var(--m5-font);
+  cursor: pointer;
+  outline: none;
+  transition: border-color .15s;
+}
+.m5-pagination-size select:focus {
+  border-color: #f18e7d;
+  box-shadow: 0 0 0 3px rgba(241,142,125,.14);
+}
+.m5-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.m5-page-button {
+  min-width: 33px;
+  height: 33px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee7ee;
+  border-radius: 9px;
+  background: #fff;
+  color: #526078;
+  font: 800 11px var(--m5-font);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.m5-page-button:hover:not(:disabled):not(.is-active) {
+  border-color: #f1a08e;
+  background: #fff3ee;
+  color: #df5542;
+}
+.m5-page-button.is-active {
+  border-color: #e95746;
+  background: #ef6654;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 4px 10px rgba(218,80,60,.22);
+  cursor: default;
+}
+.m5-page-button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.m5-page-button.is-nav svg {
+  width: 15px;
+  height: 15px;
+}
+.m5-page-ellipsis {
+  width: 24px;
+  text-align: center;
+  color: #9aa4b2;
+  font-size: 12px;
+  font-weight: 900;
+  user-select: none;
+}
+@media(max-width:1120px) {
+  .m5-inline-edit-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .m5-inline-edit-grid .m5-form-actions {
+    grid-column: 1 / -1;
+  }
+}
+@media(max-width:767px) {
+  .m5-inline-edit-grid {
+    grid-template-columns: 1fr;
+  }
+  .m5-inline-edit-grid .m5-form-actions {
+    grid-column: auto;
+  }
+  .m5-roster-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .m5-pagination-info {
+    justify-content: space-between;
+    font-size: 10px;
+  }
+  .m5-pagination-nav {
+    justify-content: center;
+  }
+}
