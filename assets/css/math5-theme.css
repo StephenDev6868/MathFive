@@ -139,3 +139,39 @@ body{margin:0}
 
 /* The writing space itself guides the student; labels no longer take notebook room. */
 .m5-notebook-paper.is-solution .m5-notebook-paper__line{grid-template-columns:minmax(0,1fr)}
+
+/* Keep long-form and supporting copy readable without changing title sizing. */
+.m5-profile-button small,
+.m5-recent-lessons button,
+.m5-problem__label,
+.m5-problem__waiting-copy,
+.m5-problem__placeholder p,
+.m5-image-action,
+.m5-composer__chat-row textarea,
+.m5-composer__model-row,
+.m5-composer__model-row select,
+.m5-composer__error,
+.m5-review__summary p,
+.m5-review__strengths li,
+.m5-review__issue p,
+.m5-review__hint,
+.m5-review__next p,
+.m5-retry-task__short input,
+.m5-retry__submit,
+.m5-solution__foot,
+.m5-ocr-review__heading small,
+.m5-ocr-review__warning,
+.m5-history-item__preview,
+.m5-history-message,
+.m5-history-message b,
+.m5-retry__count,
+.m5-retry-success span{font-size:13px}
+
+.m5-recent-lessons button small,
+.m5-problem__image figcaption,
+.m5-review__issue-head small,
+.m5-retry-task__meta>span,
+.m5-retry-task>small,
+.m5-history-status,
+.m5-history-message>small,
+.m5-brand small{font-size:11px}

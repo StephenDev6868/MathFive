@@ -105,4 +105,5 @@ async function handleLogin() {
 @media(max-width:560px){.m5-login-card{padding:25px 18px 21px;border-radius:23px}.m5-login-heading__icon{width:44px;height:44px;border-radius:14px}.m5-login-heading h2{font-size:23px}.m5-demo{margin-top:18px}.m5-login-divider{margin:15px 0}.m5-login-help{max-width:130px}}
 @media(max-width:370px){.m5-login-card{padding-inline:15px}.m5-login-heading h2{font-size:21px}.m5-login-divider span{font-size:9px}.m5-login-help{display:none}}
 @media(prefers-reduced-motion:reduce){.m5-demo,.m5-login-submit{transition:none}.m5-login-spinner{animation-duration:1.5s}}
+.m5-login-divider,.m5-login-help{font-size:13px}
 </style>

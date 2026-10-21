@@ -240,3 +240,40 @@
     justify-content: center;
   }
 }
+
+/* Increase supporting/content copy while preserving dashboard headings and titles. */
+.m5-data-note p,
+.m5-primary-button,
+.m5-secondary-button,
+.m5-credential-notice p,
+.m5-roster-table code,
+.m5-usage-toolbar select,
+.m5-usage-search input,
+.m5-insight-toolbar select,
+.m5-insight-search input,
+.m5-insight-question>p,
+.m5-insight-review>p,
+.m5-insight-empty,
+.m5-page-heading p,
+.m5-pagination-size,
+.m5-pagination-info{font-size:13px}
+
+.m5-filter-row label span,
+.m5-kpi-card small,
+.m5-chart-card__heading span,
+.m5-chart__plot strong,
+.m5-usage-progress span,
+.m5-usage-overview article span,
+.m5-usage-toolbar label>span,
+.m5-usage-table th,
+.m5-usage-table td small,
+.m5-usage-state,
+.m5-usage-note,
+.m5-difficulty-grid p,
+.m5-insight-toolbar label>span,
+.m5-insight-student small,
+.m5-insight-status,
+.m5-insight-issues header>span,
+.m5-insight-limit,
+.m5-dash-mobile-nav a,
+.m5-dash-mobile-nav button{font-size:11px}
