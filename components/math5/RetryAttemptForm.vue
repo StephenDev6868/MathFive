@@ -240,7 +240,6 @@ function submitAttempt() {
         <div class="m5-notebook-paper" :class="`is-${task.inputType}`">
           <template v-if="task.inputType === 'solution'">
             <div class="m5-notebook-paper__line m5-notebook-paper__line--solution">
-              <strong>Lời giải:</strong>
               <textarea
                 :value="solutions[index]?.explanation || ''"
                 :disabled="pending"
@@ -252,7 +251,6 @@ function submitAttempt() {
               />
             </div>
             <div class="m5-notebook-paper__line m5-notebook-paper__line--calculation">
-              <strong>Phép tính:</strong>
               <div
                 :ref="element => setMathEditor(index, element)"
                 class="m5-math-editor"

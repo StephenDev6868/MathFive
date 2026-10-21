@@ -46,6 +46,56 @@ export type TeacherDailyMetric = {
   correctRetries: number
 }
 
+export type TeacherDifficultyType = 'copied_data' | 'reasoning' | 'calculation' | 'unit' | 'notation' | 'other'
+
+export type TeacherDifficultySummary = {
+  type: TeacherDifficultyType
+  label: string
+  issueCount: number
+  studentCount: number
+}
+
+export type TeacherQuestionInsight = {
+  problemId: string
+  studentId: string
+  studentName: string
+  username: string
+  askedAt: string
+  questionText: string
+  review: null | {
+    provider: 'openai' | 'gemini'
+    status: 'correct' | 'has_errors' | 'needs_review' | 'no_attempt'
+    summary: string
+    issues: Array<{
+      location: string
+      studentWork: string
+      errorType: TeacherDifficultyType
+      explanation: string
+      hint: string
+    }>
+    nextStep: string
+  }
+  retryCount: number
+  latestRetry: null | {
+    verdict: 'ungraded' | 'correct' | 'incorrect' | 'needs_review'
+    feedback: string | null
+    createdAt: string
+  }
+}
+
+export type TeacherStudentUsage = {
+  studentId: string
+  studentName: string
+  username: string
+  loginDays: number
+  loginCount: number
+  questions: number
+  retries: number
+  correctRetries: number
+  lastActiveAt: string | null
+  isActive: boolean
+}
+
 export type TeacherDashboard = {
   classroom: AccountClassSummary
   classes: AccountClassSummary[]
@@ -58,6 +108,11 @@ export type TeacherDashboard = {
     retries: number
     correctRetries: number
     retryAccuracy: number | null
+    activeStudents: number
   }
   daily: TeacherDailyMetric[]
+  studentUsage: TeacherStudentUsage[]
+  difficultySummary: TeacherDifficultySummary[]
+  questionInsights: TeacherQuestionInsight[]
+  insightLimit: number
 }

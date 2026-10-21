@@ -1,7 +1,7 @@
 import { ProblemHistoryQuerySchema } from '~/shared/schemas/math5'
 import { math5Error } from '~/server/utils/math5-errors'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
-import { requireMath5Student } from '~/server/utils/math5-user'
+import { requireMath5Learner } from '~/server/utils/math5-user'
 
 function historyTitle(text: string) {
   const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean)
@@ -10,7 +10,7 @@ function historyTitle(text: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  const student = await requireMath5Student(event)
+  const student = await requireMath5Learner(event)
   const parsed = ProblemHistoryQuerySchema.safeParse(getQuery(event))
   if (!parsed.success) math5Error(400, 'Bộ lọc lịch sử không hợp lệ.')
 

@@ -5,6 +5,8 @@ import { useMath5SupabaseAdmin, useMath5SupabaseAuth } from './math5-supabase'
 export type Math5Student = User & { role: 'student' }
 export type Math5Teacher = User & { role: 'teacher' }
 export type Math5User = User & { role: 'student' | 'teacher' }
+/** Any authenticated account may use the personal AI practice workspace. */
+export type Math5Learner = Math5User
 
 export async function requireMath5User(event: Parameters<typeof getHeader>[0]): Promise<Math5User> {
   const authorization = getHeader(event, 'authorization')
@@ -31,6 +33,10 @@ export async function requireMath5Student(event: Parameters<typeof getHeader>[0]
   const user = await requireMath5User(event)
   if (user.role !== 'student') math5Error(403, 'Tính năng này chỉ dành cho học sinh.')
   return user as Math5Student
+}
+
+export async function requireMath5Learner(event: Parameters<typeof getHeader>[0]): Promise<Math5Learner> {
+  return requireMath5User(event)
 }
 
 export async function requireMath5Teacher(event: Parameters<typeof getHeader>[0]): Promise<Math5Teacher> {

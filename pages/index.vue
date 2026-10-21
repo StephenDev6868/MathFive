@@ -26,7 +26,7 @@ import RetryAttemptForm from '~/components/math5/RetryAttemptForm.vue'
 import WorkReview from '~/components/math5/WorkReview.vue'
 import type { ProblemHistoryItem, ReviewProvider, StudentQuestion, WorkReview as WorkReviewResult } from '~/types/math5'
 
-definePageMeta({ layout: false, middleware: ['auth', 'student'] })
+definePageMeta({ layout: false, middleware: 'auth' })
 
 useSeoMeta({
   title: 'AI kiểm tra bài làm Toán lớp 5',

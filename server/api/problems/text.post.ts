@@ -2,10 +2,10 @@ import { CreateTextProblemSchema } from '~/shared/schemas/math5'
 import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { math5Error } from '~/server/utils/math5-errors'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
-import { requireMath5Student } from '~/server/utils/math5-user'
+import { requireMath5Learner } from '~/server/utils/math5-user'
 
 export default defineEventHandler(async (event) => {
-  const student = await requireMath5Student(event)
+  const student = await requireMath5Learner(event)
   const parsed = CreateTextProblemSchema.safeParse(await readBody(event))
   if (!parsed.success) math5Error(400, 'Đề bài cần từ 10 đến 5.000 ký tự.')
 

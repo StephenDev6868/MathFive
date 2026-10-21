@@ -5,10 +5,10 @@ import { reviewRevisedMathWork } from '~/server/utils/math5-openai'
 import { reviewRevisedMathWorkWithGemini } from '~/server/utils/math5-gemini'
 import { reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
-import { requireMath5Student } from '~/server/utils/math5-user'
+import { requireMath5Learner } from '~/server/utils/math5-user'
 
 export default defineEventHandler(async (event) => {
-  const student = await requireMath5Student(event)
+  const student = await requireMath5Learner(event)
   const parsed = RetryProblemSchema.safeParse(await readBody(event))
   if (!parsed.success) math5Error(400, 'Bài làm lại chưa hợp lệ.')
 

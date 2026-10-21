@@ -136,3 +136,6 @@ body{margin:0}
 
 /* The math editor accepts normal typing; only the fraction button inserts a fraction token. */
 .m5-math-editor{min-height:40px;color:#36536b;font:800 15px/20px var(--m5-font-body);letter-spacing:.01em;white-space:pre-wrap;word-break:break-word;outline:0;cursor:text}.m5-math-editor--full{min-height:112px}.m5-math-editor:empty:before{content:attr(data-placeholder);color:#91a0aa;font-weight:700;pointer-events:none}.m5-math-editor:focus{box-shadow:inset 0 -2px 0 rgba(54,151,203,.55)}.m5-inline-fraction{display:inline-grid;grid-template-rows:16px 1px 16px;min-width:23px;margin:0 3px;vertical-align:middle;text-align:center;line-height:16px;user-select:all}.m5-inline-fraction sup,.m5-inline-fraction sub{padding:0 3px;font-size:12px;line-height:16px}.m5-inline-fraction i{display:block;width:100%;height:1px;background:currentColor}.m5-inline-fraction sub{grid-row:3}@media(max-width:520px){.m5-math-editor{font-size:13px;line-height:18px}.m5-math-editor--full{min-height:98px}}
+
+/* The writing space itself guides the student; labels no longer take notebook room. */
+.m5-notebook-paper.is-solution .m5-notebook-paper__line{grid-template-columns:minmax(0,1fr)}

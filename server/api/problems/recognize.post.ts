@@ -5,14 +5,14 @@ import { isOpenAIQuotaOrBillingError, recognizeMathProblem } from '~/server/util
 import { isGeminiVisionConfigured, recognizeMathProblemWithGemini } from '~/server/utils/math5-gemini'
 import { reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
-import { requireMath5Student } from '~/server/utils/math5-user'
+import { requireMath5Learner } from '~/server/utils/math5-user'
 
 const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const maxImageBytes = 5 * 1024 * 1024
 const maxTotalImageBytes = 15 * 1024 * 1024
 
 export default defineEventHandler(async (event) => {
-  const student = await requireMath5Student(event)
+  const student = await requireMath5Learner(event)
   const parsed = RecognizeProblemSchema.safeParse(await readBody(event))
   if (!parsed.success) math5Error(400, 'Danh sách ảnh hoặc mã yêu cầu không hợp lệ.')
   if (parsed.data.imagePaths.some(imagePath => !imagePath.startsWith(`${student.id}/`))) math5Error(403, 'Em không có quyền dùng ảnh này.')
