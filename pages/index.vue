@@ -6,6 +6,8 @@ import {
   Calculator,
   ChevronDown,
   ChevronUp,
+  CircleAlert,
+  CircleCheck,
   Clock3,
   FileText,
   Heart,
@@ -14,6 +16,7 @@ import {
   Lightbulb,
   MessageCircle,
   Search,
+  Sparkles,
   UserRound,
   X,
   Zap,
@@ -34,10 +37,14 @@ useSeoMeta({
 })
 
 type Overlay = 'notifications' | 'history' | 'tips' | 'saved' | 'hint' | 'progress' | null
+type NoticeKind = 'success' | 'warning' | 'error'
+type Notice = { id: number; kind: NoticeKind; title: string; description: string }
 
 const authStore = useAuthStore()
 const overlay = ref<Overlay>(null)
-const notice = ref('')
+const notice = ref<Notice | null>(null)
+let noticeTimer: ReturnType<typeof setTimeout> | undefined
+let noticeId = 0
 const isSubmitting = ref(false)
 const isConfirming = ref(false)
 const isRetrying = ref(false)
@@ -47,7 +54,7 @@ const unclearSegments = ref<string[]>([])
 const needsReview = ref(false)
 const ocrReview = ref<HTMLElement | null>(null)
 const workReview = ref<WorkReviewResult | null>(null)
-const reviewProvider = ref<ReviewProvider>('openai')
+const reviewProvider = ref<ReviewProvider>('gemini')
 const inputOrigin = ref<'image' | 'text' | null>(null)
 const problemImageUrls = ref<string[]>([])
 const attemptCount = ref(0)
@@ -103,7 +110,23 @@ function handleDraft(payload: Pick<StudentQuestion, 'question' | 'images'>) {
 
 onBeforeUnmount(() => {
   problemImageUrls.value.forEach(URL.revokeObjectURL)
+  clearTimeout(noticeTimer)
 })
+
+function dismissNotice() {
+  clearTimeout(noticeTimer)
+  notice.value = null
+}
+
+function showNotice(kind: NoticeKind, title: string, description: string) {
+  clearTimeout(noticeTimer)
+  notice.value = { id: ++noticeId, kind, title, description }
+  noticeTimer = setTimeout(dismissNotice, kind === 'error' ? 20000 : 18000)
+}
+
+function errorMessage(error: any, fallback: string) {
+  return error?.data?.statusMessage || error?.message || fallback
+}
 
 onMounted(() => {
   void loadHistory()
@@ -154,7 +177,7 @@ function historyStatusLabel(status: string) {
 
 async function handleSubmit(payload: StudentQuestion) {
   isSubmitting.value = true
-  notice.value = ''
+  dismissNotice()
   workReview.value = null
   attemptCount.value = 0
   try {
@@ -168,14 +191,14 @@ async function handleSubmit(payload: StudentQuestion) {
     // A readable OCR result can still contain a wrong digit. Always let the learner
     // compare the transcript with the source before sending it for assessment.
     needsReview.value = true
-    notice.value = recognized.unclearSegments.length
-      ? 'AI cần em kiểm tra vài chỗ chưa đọc rõ trước khi nhận xét.'
-      : 'Em xem lại đề và bài làm rồi bấm xác nhận nhé.'
+    showNotice('warning', 'Cùng xem lại bài nhé!', recognized.unclearSegments.length
+      ? 'AI chưa đọc rõ vài chỗ. Em kiểm tra và sửa lại chữ trước khi xác nhận nhé.'
+      : 'Em xem lại đề và bài làm rồi bấm xác nhận nhé.')
     void loadHistory(true)
     await nextTick()
     ocrReview.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } catch (error: any) {
-    notice.value = error?.data?.statusMessage || error?.message || 'Không thể gửi bài làm. Em hãy thử lại nhé.'
+    showNotice('error', 'Chưa gửi được bài', errorMessage(error, 'Em hãy thử lại nhé.'))
   } finally {
     isSubmitting.value = false
   }
@@ -184,17 +207,17 @@ async function handleSubmit(payload: StudentQuestion) {
 async function submitRetryAttempt(answer: string) {
   if (!problemId.value || !workReview.value || !answer.trim()) return
   isRetrying.value = true
-  notice.value = ''
+  dismissNotice()
   try {
     const result = await retry(problemId.value, answer.trim(), reviewProvider.value)
     workReview.value = result
     attemptCount.value += 1
-    notice.value = result.status === 'correct'
-      ? 'Tuyệt vời! Em đã tự sửa đúng bài làm.'
-      : result.summary
+    showNotice(result.status === 'correct' ? 'success' : 'warning',
+      result.status === 'correct' ? 'Giỏi lắm! 🎉' : 'Mình cùng xem lại nhé!',
+      result.status === 'correct' ? 'Em đã tự sửa đúng bài làm.' : 'AI đã nhận xét bài làm mới ở trang bên phải.')
     void loadHistory(true)
   } catch (error: any) {
-    notice.value = error?.data?.statusMessage || error?.message || 'Chưa thể chấm bài làm lại. Em hãy thử lại nhé.'
+    showNotice('error', 'Chưa chấm được bài', errorMessage(error, 'Em hãy thử lại nhé.'))
   } finally {
     isRetrying.value = false
   }
@@ -203,7 +226,7 @@ async function submitRetryAttempt(answer: string) {
 async function confirmAndReview() {
   if (!problemId.value) return
   isConfirming.value = true
-  notice.value = ''
+  dismissNotice()
   try {
     await confirm(problemId.value, confirmedText.value)
     const result = await review(problemId.value, reviewProvider.value)
@@ -215,10 +238,14 @@ async function confirmAndReview() {
       unclearSegments.value = [result.nextStep]
       needsReview.value = true
     }
-    notice.value = result.summary
+    showNotice(result.status === 'correct' ? 'success' : 'warning',
+      result.status === 'correct' ? 'Bài làm tốt lắm! 🌟' : result.status === 'needs_review' ? 'Cần xem lại bài một chút' : 'AI đã xem bài của em',
+      result.status === 'needs_review'
+        ? 'Em kiểm tra lại nội dung ở trang bên trái rồi xác nhận nhé.'
+        : 'Xem nhận xét và gợi ý ở trang bên phải nhé.')
     void loadHistory(true)
   } catch (error: any) {
-    notice.value = error?.data?.statusMessage || error?.message || 'Chưa thể kiểm tra bài làm. Em hãy thử lại nhé.'
+    showNotice('error', 'Chưa kiểm tra được bài', errorMessage(error, 'Em hãy thử lại nhé.'))
   } finally {
     isConfirming.value = false
   }
@@ -355,7 +382,6 @@ function handleNavigation(id: string) {
             />
           </template>
           </BookSpread>
-          <p v-if="notice" class="m5-notice" role="status">{{ notice }}</p>
         </section>
       </div>
     </main>
@@ -367,6 +393,22 @@ function handleNavigation(id: string) {
       <button type="button" @click="openOverlay('tips')"><Bell /><span>Mẹo hay</span></button>
       <button type="button" @click="openProfile"><UserRound /><span>Hồ sơ</span></button>
     </nav>
+
+    <Teleport to="body">
+      <div class="m5-toast-region" aria-live="polite" aria-atomic="true">
+        <Transition name="m5-toast">
+          <section v-if="notice" :key="notice.id" class="m5-toast-card" :class="`is-${notice.kind}`" :role="notice.kind === 'error' ? 'alert' : 'status'">
+            <span class="m5-toast-card__icon" aria-hidden="true">
+              <CircleAlert v-if="notice.kind === 'error'" />
+              <CircleCheck v-else-if="notice.kind === 'success'" />
+              <Sparkles v-else />
+            </span>
+            <div class="m5-toast-card__copy"><strong>{{ notice.title }}</strong><p>{{ notice.description }}</p></div>
+            <button class="m5-toast-card__close" type="button" aria-label="Đóng thông báo" @click="dismissNotice"><X :size="18" /></button>
+          </section>
+        </Transition>
+      </div>
+    </Teleport>
 
     <Teleport to="body">
       <div v-if="overlay" class="m5-overlay" role="presentation" @click.self="overlay = null">

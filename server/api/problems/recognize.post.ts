@@ -1,7 +1,7 @@
 import { RecognizeProblemSchema } from '~/shared/schemas/math5'
 import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
-import { isOpenAIQuotaOrBillingError, recognizeMathProblem } from '~/server/utils/math5-openai'
+import { recognizeMathProblem } from '~/server/utils/math5-openai'
 import { isGeminiVisionConfigured, recognizeMathProblemWithGemini } from '~/server/utils/math5-gemini'
 import { reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
@@ -42,21 +42,25 @@ export default defineEventHandler(async (event) => {
     base64: Buffer.from(await file.arrayBuffer()).toString('base64'),
     mimeType: file.type,
   })))
-  try {
-    const imageDataUrls = imageData.map(image => `data:${image.mimeType};base64,${image.base64}`)
-    recognized = await recognizeMathProblem(imageDataUrls)
-  } catch (error) {
-    if (isOpenAIQuotaOrBillingError(error) && isGeminiVisionConfigured()) {
-      console.warn('[math5] OpenAI OCR quota or billing limit reached; falling back to Gemini', {
-        code: (error as { code?: unknown }).code,
+  const imageDataUrls = imageData.map(image => `data:${image.mimeType};base64,${image.base64}`)
+  if (isGeminiVisionConfigured()) {
+    try {
+      recognized = await recognizeMathProblemWithGemini(imageData)
+    } catch (geminiError) {
+      console.warn('[math5] Gemini OCR failed; falling back to OpenAI', {
+        status: (geminiError as { status?: unknown }).status,
       })
       try {
-        recognized = await recognizeMathProblemWithGemini(imageData)
-      } catch (geminiError) {
-        return asPublicModelError(geminiError, 'gemini')
+        recognized = await recognizeMathProblem(imageDataUrls)
+      } catch (openaiError) {
+        return asPublicModelError(openaiError, 'openai')
       }
-    } else {
-      return asPublicModelError(error)
+    }
+  } else {
+    try {
+      recognized = await recognizeMathProblem(imageDataUrls)
+    } catch (openaiError) {
+      return asPublicModelError(openaiError, 'openai')
     }
   }
 
