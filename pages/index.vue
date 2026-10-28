@@ -182,6 +182,7 @@ async function handleSubmit(payload: StudentQuestion) {
   attemptCount.value = 0
   try {
     const recognized = await submit(payload)
+    if (recognized.guestQuota) authStore.guestQuestionsRemaining = recognized.guestQuota.remaining
     problemId.value = recognized.problemId
     reviewProvider.value = payload.provider
     inputOrigin.value = payload.images.length ? 'image' : 'text'
@@ -198,6 +199,7 @@ async function handleSubmit(payload: StudentQuestion) {
     await nextTick()
     ocrReview.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   } catch (error: any) {
+    if (authStore.isGuest) await authStore.refreshGuestQuota().catch(() => undefined)
     showNotice('error', 'Chưa gửi được bài', errorMessage(error, 'Em hãy thử lại nhé.'))
   } finally {
     isSubmitting.value = false
@@ -359,7 +361,17 @@ function handleNavigation(id: string) {
                 <p>Đề bài và phần em đã làm sẽ hiện ở đây sau khi gửi.</p>
               </div>
             </div>
-            <PhotoQuestionComposer :pending="isSubmitting" @draft="handleDraft" @submit="handleSubmit" />
+            <div v-if="authStore.isGuest" class="m5-guest-quota" role="status">
+              <UserRound :size="17" aria-hidden="true" />
+              <span>Chế độ khách:</span>
+              <strong>{{ authStore.guestQuestionsRemaining ?? 10 }}/10 lượt gửi bài còn lại</strong>
+            </div>
+            <PhotoQuestionComposer
+              :pending="isSubmitting"
+              :disabled="authStore.isGuest && authStore.guestQuestionsRemaining === 0"
+              @draft="handleDraft"
+              @submit="handleSubmit"
+            />
             <div v-if="problemId && needsReview" ref="ocrReview" class="m5-ocr-review" tabindex="-1">
               <div class="m5-ocr-review__heading"><span aria-hidden="true">🔎</span><div><strong>Xác nhận đề và bài làm</strong><small>Hãy sửa phần AI đọc sai chữ; đừng sửa lỗi Toán em muốn AI kiểm tra.</small></div></div>
               <div v-if="unclearSegments.length" class="m5-ocr-review__warning" role="alert"><strong>AI chưa chắc ở:</strong><ul><li v-for="segment in unclearSegments" :key="segment">{{ segment }}</li></ul></div>

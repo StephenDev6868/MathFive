@@ -1,6 +1,12 @@
 import type { AttemptReview, ProblemHistoryItem, ReviewProvider, StudentQuestion, WorkReview } from '~/types/math5'
 
-type RecognizedProblem = { problemId: string; ocrText: string; unclearSegments: string[]; needsConfirmation?: boolean }
+type RecognizedProblem = {
+  problemId: string
+  ocrText: string
+  unclearSegments: string[]
+  needsConfirmation?: boolean
+  guestQuota?: { limit: number; remaining: number } | null
+}
 type ReviewedProblem = WorkReview & { problemId: string }
 
 export function useProblem() {

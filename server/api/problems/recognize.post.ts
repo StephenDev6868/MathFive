@@ -3,7 +3,7 @@ import { recordMath5Activity } from '~/server/utils/math5-activity'
 import { asPublicModelError, math5Error } from '~/server/utils/math5-errors'
 import { recognizeMathProblem } from '~/server/utils/math5-openai'
 import { isGeminiVisionConfigured, recognizeMathProblemWithGemini } from '~/server/utils/math5-gemini'
-import { reserveMath5Quota } from '~/server/utils/math5-quota'
+import { reserveGuestQuestionQuota, reserveMath5Quota } from '~/server/utils/math5-quota'
 import { useMath5SupabaseAdmin } from '~/server/utils/math5-supabase'
 import { requireMath5Learner } from '~/server/utils/math5-user'
 
@@ -36,7 +36,8 @@ export default defineEventHandler(async (event) => {
   }))
   if (files.reduce((total, file) => total + file.size, 0) > maxTotalImageBytes) math5Error(413, 'Tổng dung lượng ảnh tối đa là 15 MB.')
 
-  await reserveMath5Quota(student.id, 'ocr')
+  const guestQuota = await reserveGuestQuestionQuota(student)
+  if (!student.isGuest) await reserveMath5Quota(student.id, 'ocr')
   let recognized
   const imageData = await Promise.all(files.map(async file => ({
     base64: Buffer.from(await file.arrayBuffer()).toString('base64'),
@@ -85,6 +86,7 @@ export default defineEventHandler(async (event) => {
       unclearSegments: recognized.result.unclearSegments,
       needsConfirmation: recognized.result.needsConfirmation,
       status: data.status,
+      guestQuota,
     },
     requestId: parsed.data.requestId,
   }

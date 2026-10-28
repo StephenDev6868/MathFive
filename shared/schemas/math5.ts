@@ -2,6 +2,10 @@ import { z } from 'zod'
 
 export const RequestIdSchema = z.string().uuid()
 
+export const GuestLoginSchema = z.object({
+  displayName: z.string().trim().min(2).max(50),
+})
+
 export const CreateTextProblemSchema = z.object({
   text: z.string().trim().min(10).max(5000),
   requestId: RequestIdSchema,

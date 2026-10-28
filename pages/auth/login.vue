@@ -6,12 +6,25 @@
       <h2>Đăng nhập</h2>
     </div>
 
-    <button type="button" class="m5-demo" @click="fillDemoAccount">
-      <span class="m5-demo__icon"><WandSparkles :size="19" aria-hidden="true" /></span>
-      <strong>Dùng tài khoản học thử</strong>
-      <ChevronRight class="m5-demo__action" :size="18" aria-hidden="true" />
+    <button type="button" class="m5-demo" :aria-expanded="showGuestForm" aria-controls="guest-login-form" @click="showGuestForm = !showGuestForm">
+      <span class="m5-demo__icon"><UserRound :size="19" aria-hidden="true" /></span>
+      <span class="m5-demo__copy"><strong>Học thử với chế độ khách</strong><small>Chỉ cần nhập tên · tối đa 10 câu hỏi</small></span>
+      <ChevronRight class="m5-demo__action" :class="{ 'is-open': showGuestForm }" :size="18" aria-hidden="true" />
     </button>
-    <div class="m5-login-divider"><span>hoặc</span></div>
+    <form v-if="showGuestForm" id="guest-login-form" class="m5-guest-form" @submit.prevent="handleGuestLogin">
+      <label class="m5-login-field__label" for="guest-name">Tên của em</label>
+      <div class="m5-login-field__control">
+        <UserRound :size="20" aria-hidden="true" />
+        <input id="guest-name" ref="guestNameInput" v-model.trim="guestName" type="text" minlength="2" maxlength="50" autocomplete="name" placeholder="Ví dụ: Minh Anh" required />
+      </div>
+      <p>Phiên khách lưu lịch sử trên thiết bị này và dừng sau 10 bài mới.</p>
+      <button class="m5-guest-submit" type="submit" :disabled="loading">
+        <span v-if="loading" class="m5-login-spinner" aria-hidden="true" />
+        <WandSparkles v-else :size="18" aria-hidden="true" />
+        {{ loading ? 'Đang bắt đầu...' : 'Bắt đầu học thử' }}
+      </button>
+    </form>
+    <div class="m5-login-divider"><span>hoặc đăng nhập bằng tài khoản</span></div>
 
     <form class="m5-login-form" @submit.prevent="handleLogin">
       <div class="m5-login-field">
@@ -55,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowRight, AtSign, BookOpen, Check, ChevronRight, Eye, EyeOff, LockKeyhole, Rocket, WandSparkles } from 'lucide-vue-next'
+import { ArrowRight, AtSign, BookOpen, Check, ChevronRight, Eye, EyeOff, LockKeyhole, Rocket, UserRound, WandSparkles } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'auth', middleware: 'guest' })
 useSeoMeta({ title: 'Đăng nhập', description: 'Đăng nhập để học Toán lớp 5 cùng MathFive.' })
@@ -65,12 +78,32 @@ const toast = useToast()
 const route = useRoute()
 const loading = ref(false)
 const showPassword = ref(false)
+const showGuestForm = ref(false)
+const guestName = ref('')
+const guestNameInput = ref<HTMLInputElement | null>(null)
 const form = reactive({ username: '', password: '', rememberMe: true })
 
-function fillDemoAccount() {
-  form.username = 'demo'
-  form.password = '123456'
-  toast.add({ title: 'Đã điền thông tin', description: 'Bấm đăng nhập để tiếp tục.', color: 'emerald' })
+watch(showGuestForm, async (visible) => {
+  if (!visible) return
+  await nextTick()
+  guestNameInput.value?.focus()
+})
+
+async function handleGuestLogin() {
+  if (guestName.value.trim().length < 2) {
+    toast.add({ title: 'Tên hơi ngắn', description: 'Em nhập tên có ít nhất 2 ký tự nhé.', color: 'red' })
+    return
+  }
+  loading.value = true
+  try {
+    await authStore.loginAsGuest(guestName.value)
+    toast.add({ title: `Chào ${authStore.user?.name}!`, description: 'Em có 10 lượt gửi bài ở chế độ khách.', color: 'emerald' })
+    await navigateTo((route.query.redirect as string) || '/')
+  } catch (err: any) {
+    toast.add({ title: 'Chưa vào được chế độ khách', description: err?.message || 'Em thử lại sau một chút nhé.', color: 'red' })
+  } finally {
+    loading.value = false
+  }
 }
 
 async function handleLogin() {
@@ -96,7 +129,8 @@ async function handleLogin() {
 .m5-login-card{position:relative;padding:clamp(26px,3vw,38px);border:1px solid rgba(231,198,172,.9);border-radius:30px;background:rgba(255,253,248,.96);box-shadow:0 22px 60px rgba(91,57,37,.17),0 4px 0 rgba(184,112,67,.08);backdrop-filter:blur(12px)}
 .m5-login-card__tape{position:absolute;top:-12px;left:50%;width:92px;height:25px;transform:translateX(-50%) rotate(-1deg);border-radius:3px;background:rgba(255,220,128,.72);box-shadow:inset 0 0 0 1px rgba(218,172,69,.12)}
 .m5-login-heading{display:flex;align-items:center;gap:13px}.m5-login-heading__icon{width:50px;height:50px;display:grid;place-items:center;flex:none;border-radius:16px;background:#ffe7df;color:#df5542;transform:rotate(-3deg)}.m5-login-heading h2{margin:0;color:#26375d;font:800 clamp(26px,2.2vw,31px)/1.08 var(--m5-heading);letter-spacing:-.35px}
-.m5-demo{width:100%;min-height:56px;margin-top:23px;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px dashed #8bcdbb;border-radius:16px;background:#edf9f5;color:#276f60;text-align:left;transition:transform .18s ease,background .18s ease,border-color .18s ease}.m5-demo:hover{transform:translateY(-1px);border-color:#48a98f;background:#e4f7f0}.m5-demo__icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:12px;background:#d6f1e8}.m5-demo strong{font-size:12px;font-weight:900}.m5-demo__action{margin-left:auto;flex:none;color:#27836d}
+.m5-demo{width:100%;min-height:56px;margin-top:23px;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1.5px dashed #8bcdbb;border-radius:16px;background:#edf9f5;color:#276f60;text-align:left;transition:transform .18s ease,background .18s ease,border-color .18s ease}.m5-demo:hover{transform:translateY(-1px);border-color:#48a98f;background:#e4f7f0}.m5-demo__icon{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:12px;background:#d6f1e8}.m5-demo__copy{display:grid;gap:2px}.m5-demo strong{font-size:12px;font-weight:900}.m5-demo small{color:#568579;font-size:10px;font-weight:800}.m5-demo__action{margin-left:auto;flex:none;color:#27836d;transition:transform .18s ease}.m5-demo__action.is-open{transform:rotate(90deg)}
+.m5-guest-form{display:grid;gap:8px;margin-top:10px;padding:14px;border:1px solid #cae9df;border-radius:16px;background:#f7fcfa}.m5-guest-form p{margin:0;color:#68758a;font-size:10px;font-weight:700;line-height:1.45}.m5-guest-submit{min-height:46px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;border:0;border-radius:13px;background:#3a9b82;color:#fff;box-shadow:0 4px 0 #277963;font-size:12px;font-weight:900}.m5-guest-submit:hover:not(:disabled){background:#318d76}.m5-guest-submit:disabled{cursor:wait;opacity:.72}
 .m5-login-divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:#99929a;font-size:10px;font-weight:800;white-space:nowrap}.m5-login-divider::before,.m5-login-divider::after{content:'';height:1px;flex:1;background:#eee1d7}
 .m5-login-form{display:grid;gap:15px}.m5-login-field{display:grid;gap:6px}.m5-login-field__label{color:#35415e;font-size:12px;font-weight:900}.m5-login-field__control{min-height:52px;display:flex;align-items:center;gap:10px;padding:0 13px;border:1.5px solid #d9dfe7;border-radius:14px;background:#fff;color:#8b96a9;transition:border-color .18s ease,box-shadow .18s ease}.m5-login-field__control:focus-within{border-color:#5b9bea;box-shadow:0 0 0 4px rgba(91,155,234,.14);color:#397fc7}.m5-login-field__control input{min-width:0;height:48px;flex:1;border:0;outline:0;background:transparent;color:#26375d;font-size:13px;font-weight:800}.m5-login-field__control input::placeholder{color:#a1a8b5;font-weight:700}.m5-password-toggle{width:42px;height:42px;display:grid;place-items:center;flex:none;margin-right:-9px;border:0;border-radius:11px;background:transparent;color:#77849a}.m5-password-toggle:hover{background:#eef5fc;color:#397fc7}
 .m5-login-options{display:flex;align-items:center;justify-content:space-between;gap:12px}.m5-login-remember{min-height:38px;display:flex;align-items:center;gap:7px;color:#4d5870;font-size:11px;font-weight:900;cursor:pointer}.m5-login-remember input{position:absolute;opacity:0;pointer-events:none}.m5-login-remember span{width:21px;height:21px;display:grid;place-items:center;border:1.5px solid #bbc5d2;border-radius:7px;background:#fff;color:transparent}.m5-login-remember input:checked+span{border-color:#3aa188;background:#3aa188;color:#fff}.m5-login-remember input:focus-visible+span{outline:3px solid rgba(76,147,226,.35);outline-offset:2px}.m5-login-help{max-width:150px;color:#c75a48;font-size:10px;font-weight:800;line-height:1.4;text-align:right}

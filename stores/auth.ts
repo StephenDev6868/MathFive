@@ -8,13 +8,27 @@ export const useAuthStore = defineStore('auth', () => {
   const session = useSupabaseSession()
   const user = useState<User | null>('auth_user', () => null)
   const loading = ref(false)
+  const guestQuestionsRemaining = ref<number | null>(null)
   const token = computed(() => session.value?.access_token ?? null)
   const isAuthenticated = computed(() => Boolean(token.value && user.value))
+  const isGuest = computed(() => Boolean(user.value?.isGuest))
+
+  async function refreshGuestQuota(accessToken = token.value) {
+    if (!accessToken || !user.value?.isGuest) {
+      guestQuestionsRemaining.value = null
+      return
+    }
+    const result = await $fetch<{ data: { remaining: number } }>('/api/auth/guest-quota', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    guestQuestionsRemaining.value = result.data.remaining
+  }
 
   async function fetchProfile() {
     const { data: authData } = await supabase.auth.getUser()
     if (!authData.user) {
       user.value = null
+      guestQuestionsRemaining.value = null
       return
     }
     const { data: profileData } = await supabase.from('profiles')
@@ -34,7 +48,9 @@ export const useAuthStore = defineStore('auth', () => {
       role: profile.role === 'teacher' ? 'teacher' : 'student',
       avatar: '',
       createdAt: profile.created_at,
+      isGuest: Boolean(authData.user.is_anonymous || authData.user.app_metadata?.is_guest),
     }
+    if (user.value.isGuest) await refreshGuestQuota().catch(() => undefined)
   }
 
   async function login(credentials: LoginCredentials) {
@@ -65,11 +81,49 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function loginAsGuest(displayName: string) {
+    loading.value = true
+    try {
+      const name = displayName.trim().replace(/\s+/g, ' ')
+      if (name.length < 2 || name.length > 50) {
+        throw new Error('Tên của em cần từ 2 đến 50 ký tự.')
+      }
+      const result = await $fetch<{ data: { accessToken: string; refreshToken: string } }>('/api/auth/guest', {
+        method: 'POST',
+        body: { displayName: name },
+      })
+      const { error } = await supabase.auth.setSession({
+        access_token: result.data.accessToken,
+        refresh_token: result.data.refreshToken,
+      })
+      if (error) throw error
+
+      await fetchProfile()
+      if (!user.value) throw new Error('Chưa thể khởi tạo hồ sơ dùng thử.')
+      return user.value
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function logout() {
     await supabase.auth.signOut()
     user.value = null
+    guestQuestionsRemaining.value = null
     await navigateTo('/auth/login')
   }
 
-  return { user, token, loading, isAuthenticated, fetchProfile, login, logout }
+  return {
+    user,
+    token,
+    loading,
+    isAuthenticated,
+    isGuest,
+    guestQuestionsRemaining,
+    fetchProfile,
+    refreshGuestQuota,
+    login,
+    loginAsGuest,
+    logout,
+  }
 })

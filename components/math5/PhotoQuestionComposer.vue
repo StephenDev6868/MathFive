@@ -6,7 +6,7 @@ const emit = defineEmits<{
   submit: [payload: StudentQuestion]
   draft: [payload: Pick<StudentQuestion, 'question' | 'images'>]
 }>()
-withDefaults(defineProps<{ pending?: boolean }>(), { pending: false })
+const props = withDefaults(defineProps<{ pending?: boolean; disabled?: boolean }>(), { pending: false, disabled: false })
 const cameraInput = ref<HTMLInputElement | null>(null)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const question = ref('')
@@ -67,6 +67,10 @@ function removeImage(index: number) {
 }
 function submit() {
   error.value = ''
+  if (props.disabled) {
+    error.value = 'Em đã dùng hết 10 lượt ở chế độ khách. Hãy đăng nhập để tiếp tục nhé!'
+    return
+  }
   if (!question.value.trim() && !images.value.length) {
     error.value = 'Em hãy nhập đề kèm bài làm hoặc chọn ảnh vở bài tập nhé!'
     return
@@ -81,11 +85,11 @@ onBeforeUnmount(() => clearImages(false))
   <div class="m5-composer">
     <!-- Row 1: two large image actions -->
     <div class="m5-composer__image-row">
-      <button class="m5-image-action m5-image-action--camera" type="button" :disabled="pending" @click="cameraInput?.click()">
+      <button class="m5-image-action m5-image-action--camera" type="button" :disabled="pending || disabled" @click="cameraInput?.click()">
         <Camera :size="25" aria-hidden="true" />
         <span>Chụp ảnh bài làm</span>
       </button>
-      <button class="m5-image-action m5-image-action--upload" type="button" :disabled="pending" @click="uploadInput?.click()">
+      <button class="m5-image-action m5-image-action--upload" type="button" :disabled="pending || disabled" @click="uploadInput?.click()">
         <ImageUp :size="25" aria-hidden="true" />
         <span>Tải ảnh bài làm</span>
       </button>
@@ -108,19 +112,19 @@ onBeforeUnmount(() => clearImages(false))
     <!-- Row 2: independent full-width chat entry -->
     <label class="m5-composer__chat-row">
       <span class="m5-sr-only">Nhập đề và bài làm Toán lớp 5</span>
-      <textarea v-model="question" rows="2" maxlength="3000" :disabled="pending" placeholder="Hoặc nhập đề bài và cách em đã làm..." />
+      <textarea v-model="question" rows="2" maxlength="3000" :disabled="pending || disabled" :placeholder="disabled ? 'Đã hết 10 lượt dùng thử' : 'Hoặc nhập đề bài và cách em đã làm...'" />
     </label>
     <label class="m5-composer__model-row">
       <span>Model chữa bài</span>
-      <select v-model="provider" :disabled="pending" aria-label="Chọn model chữa bài">
+      <select v-model="provider" :disabled="pending || disabled" aria-label="Chọn model chữa bài">
         <option value="openai">OpenAI</option>
         <option value="gemini">Google Gemini</option>
       </select>
     </label>
     <p v-if="error" class="m5-composer__error" role="alert">{{ error }}</p>
-    <button class="m5-composer__send" type="button" :disabled="pending" @click="submit">
+    <button class="m5-composer__send" type="button" :disabled="pending || disabled" @click="submit">
       <span v-if="pending" class="m5-spinner" aria-hidden="true" />
-      <Send v-else :size="23" aria-hidden="true" /> {{ pending ? 'Đang đọc bài làm...' : 'Kiểm tra bài làm' }}
+      <Send v-else :size="23" aria-hidden="true" /> {{ pending ? 'Đang đọc bài làm...' : disabled ? 'Đã hết lượt dùng thử' : 'Kiểm tra bài làm' }}
     </button>
   </div>
 </template>

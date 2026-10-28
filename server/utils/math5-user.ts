@@ -4,7 +4,7 @@ import { useMath5SupabaseAdmin, useMath5SupabaseAuth } from './math5-supabase'
 
 export type Math5Student = User & { role: 'student' }
 export type Math5Teacher = User & { role: 'teacher' }
-export type Math5User = User & { role: 'student' | 'teacher' }
+export type Math5User = User & { role: 'student' | 'teacher'; isGuest: boolean }
 /** Any authenticated account may use the personal AI practice workspace. */
 export type Math5Learner = Math5User
 
@@ -26,7 +26,10 @@ export async function requireMath5User(event: Parameters<typeof getHeader>[0]): 
   if (!profile || (profile.role !== 'student' && profile.role !== 'teacher')) {
     math5Error(403, 'Tài khoản chưa được phân quyền hợp lệ.')
   }
-  return Object.assign(data.user, { role: profile.role as 'student' | 'teacher' })
+  return Object.assign(data.user, {
+    role: profile.role as 'student' | 'teacher',
+    isGuest: Boolean(data.user.is_anonymous || data.user.app_metadata?.is_guest),
+  })
 }
 
 export async function requireMath5Student(event: Parameters<typeof getHeader>[0]): Promise<Math5Student> {

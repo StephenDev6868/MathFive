@@ -188,3 +188,6 @@ body{margin:0}
 .m5-history-status,
 .m5-history-message>small,
 .m5-brand small{font-size:11px}
+
+.m5-guest-quota{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0 2px;padding:9px 12px;border:1px solid #c9e7de;border-radius:12px;background:#eef9f5;color:#407166;font-size:11px;font-weight:800}
+.m5-guest-quota strong{color:#23745f}

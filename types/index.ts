@@ -8,6 +8,7 @@ export interface User {
   company?: string
   bio?: string
   createdAt: string
+  isGuest?: boolean
 }
 
 export interface AuthState {

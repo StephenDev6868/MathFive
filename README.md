@@ -11,7 +11,7 @@ Bộ khung mã nguồn hoàn chỉnh (Starter Template) xây dựng bằng **Nux
 - **🔐 Quản lý Phiên & Auth Guard:** 
   - Lưu token an toàn với `useCookie` tương thích hoàn hảo giữa Client và Server SSR hydration.
   - Phân tách luồng truy cập với Nuxt Route Middleware (`middleware/auth.ts`, `middleware/guest.ts`).
-  - Trang đăng nhập có sẵn tính năng **Tự động điền tài khoản mẫu (Demo autofill)**.
+  - Trang đăng nhập có **chế độ khách**, chỉ cần nhập tên và được gửi tối đa 10 bài mới.
 - **📊 Khu vực Cổng Thành viên (Member Portal):**
   - Giao diện riêng biệt (`layouts/portal.vue`) với thanh Sidebar và Header phản hồi đa màn hình (Mobile Drawer).
   - Bảng tổng quan (Dashboard) hiển thị thống kê tài nguyên, nhật ký hoạt động thời gian thực.
@@ -114,11 +114,11 @@ pnpm preview
 
 ---
 
-## 🔑 Tài Khoản Thử Nghiệm (Demo Account)
+## 🔑 Chế độ khách
 
-Khi truy cập trang [Đăng nhập](http://localhost:3000/auth/login), bạn có thể click nút **"Tự động điền"** hoặc sử dụng thông tin:
-- **Email:** `demo@mathfive.com`
-- **Mật khẩu:** `123456`
+Khi truy cập trang [Đăng nhập](http://localhost:3000/auth/login), chọn **"Học thử với chế độ khách"** và nhập tên để bắt đầu. Mỗi phiên khách được gửi tối đa 10 bài mới; giới hạn được kiểm tra ở server.
+
+Phiên khách được cấp bởi server nên không cần bật **Anonymous Sign-Ins** trong Supabase. Khi deploy production, nên chạy migration `math5-ai-agent-blueprint/supabase/migrations/20261027_000007_guest_access.sql` để giới hạn 10 lượt được giữ nguyên ngay cả khi có nhiều yêu cầu đồng thời.
 
 ---
 
